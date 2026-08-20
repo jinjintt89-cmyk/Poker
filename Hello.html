@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Arcade of Lost Hands</title>
+<style>
+:root{
+  --bg:#070510;--panel:#100b1b;--panel2:#171025;--line:#30204a;
+  --text:#eee9ff;--dim:#9389ae;--cyan:#2de8ff;--pink:#ff2d95;
+  --purple:#a742ff;--gold:#ffd23f;--green:#39ff88;--red:#ff3b3b;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05030a;color:var(--text);font-family:Inter,system-ui,Segoe UI,sans-serif}
+button{font:inherit}
+#canvasWrap{position:relative;width:1280px;height:800px;transform-origin:top left;overflow:hidden;background:#090611;border:1px solid #241735;box-shadow:0 0 60px #000}
+#bgCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+#game{position:absolute;inset:0;z-index:1}
+.hidden{display:none!important}
+.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(4,2,10,.78);backdrop-filter:blur(5px);z-index:30}
+.modal{width:760px;max-height:690px;overflow:auto;padding:34px;background:linear-gradient(145deg,#171025,#0c0815);border:1px solid #4b326a;border-radius:18px;box-shadow:0 25px 90px #000;text-align:center}
+.title{font-size:48px;letter-spacing:5px;color:var(--cyan);text-shadow:0 0 18px #2de8ff55;margin:0 0 8px}
+.subtitle{color:var(--dim);letter-spacing:2px;margin-bottom:30px}
+.btn{border:1px solid #4a3566;background:#171024;color:var(--text);padding:12px 18px;border-radius:9px;cursor:pointer;transition:.15s;box-shadow:0 5px 15px #0005}
+.btn:hover:not(:disabled){transform:translateY(-2px);border-color:var(--cyan);box-shadow:0 0 18px #2de8ff22}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.primary{border-color:var(--cyan);color:var(--cyan)}
+.btn.danger{border-color:var(--pink);color:#ff78b9}
+#topbar{height:82px;display:flex;align-items:center;gap:12px;padding:12px 18px;background:#0b0712e8;border-bottom:1px solid #2b1b42}
+.hudBox{min-width:90px;padding:8px 12px;background:#120c1d;border:1px solid #2b1d40;border-radius:8px}
+.hudLabel{font-size:10px;color:var(--dim);letter-spacing:1px}.hudValue{font-size:20px;font-weight:800}
+#opponentBox{margin-left:auto;text-align:right;max-width:430px}.oppName{color:var(--pink);font-weight:800}.oppLine{font-size:12px;color:var(--dim)}
+#relicBar{position:absolute;left:18px;top:94px;display:flex;gap:7px;z-index:5}
+.relic{position:relative;width:40px;height:40px;border:1px solid #4a3263;border-radius:8px;background:#130c20;display:grid;place-items:center;font-size:21px;cursor:help}
+.tooltip{display:none;position:absolute;left:0;top:47px;width:250px;padding:9px;background:#08050d;border:1px solid #5c3d7b;border-radius:7px;font-size:11px;text-align:left;z-index:20}
+.relic:hover .tooltip{display:block}
+#main{position:absolute;left:0;right:0;top:82px;bottom:150px;padding:22px 30px;display:flex;flex-direction:column}
+#scorePanel{display:flex;align-items:center;justify-content:center;gap:80px;height:125px}
+#handRankText{font-size:28px;color:var(--cyan);font-weight:800}
+#handRankScore{font-size:14px;color:var(--dim);margin-top:5px}
+.score{font-size:42px;font-weight:900}.target{color:var(--gold)}
+#handArea{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;min-height:280px}
+.card{width:112px;height:170px;background:linear-gradient(145deg,#f7f4ff,#d9d3e8);color:#181321;border-radius:10px;border:2px solid #aaa2b8;position:relative;cursor:pointer;box-shadow:0 7px 16px #0009;transition:.14s;user-select:none}
+.card:hover{transform:translateY(-10px);box-shadow:0 15px 25px #000c}
+.card.selected{transform:translateY(-22px);border-color:var(--cyan);box-shadow:0 0 22px #2de8ff77,0 15px 25px #000c}
+.suit-hearts .card-rank,.suit-hearts .card-suit,.suit-diamonds .card-rank,.suit-diamonds .card-suit{color:#d92857}
+.card-rank{position:absolute;left:10px;top:8px;font-size:28px;font-weight:900}
+.card-suit{position:absolute;left:12px;top:42px;font-size:30px}
+.card-keyword{position:absolute;bottom:8px;left:5px;right:5px;text-align:center;font-size:9px;font-weight:900;letter-spacing:1px}
+#controls{display:flex;justify-content:center;gap:12px;align-items:center}
+#bottom{position:absolute;left:0;right:0;bottom:0;height:150px;border-top:1px solid #2b1b42;background:#0b0712e8;padding:10px 18px}
+#logBar{height:82px;overflow:hidden;font-size:11px;line-height:17px;color:var(--dim);display:flex;flex-direction:column;justify-content:flex-end}
+#jokerTicker{color:#77698e;font-size:12px;text-align:center;margin-bottom:8px}
+#floatText{position:absolute;inset:0;pointer-events:none;z-index:50}
+.float-num{position:absolute;font-weight:900;text-shadow:0 2px 8px #000;animation:floatUp .95s ease-out forwards}
+@keyframes floatUp{0%{opacity:0;transform:translateY(10px) scale(.8)}15%{opacity:1}100%{opacity:0;transform:translateY(-70px) scale(1.08)}}
+#screenFlash{position:absolute;inset:0;z-index:45;pointer-events:none;opacity:0}
+.shop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0}
+.shop-item{padding:18px;min-height:165px;border:1px solid #3b2853;border-radius:12px;background:#110b1b;cursor:pointer}
+.shop-item:hover:not(.disabled){border-color:var(--gold);transform:translateY(-2px)}
+.shop-item.disabled{opacity:.4;cursor:not-allowed}
+.shop-icon{font-size:30px;margin-bottom:8px}.shop-item .name{font-weight:800}.shop-item .desc{font-size:11px;color:var(--dim);margin:8px 0;min-height:35px}.price{color:var(--gold);font-weight:800}
+.event-options{display:flex;flex-direction:column;gap:12px;margin-top:25px}
+.summary{color:var(--dim);line-height:1.7}
+.statLine{display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #271a39}
+#saveStatus{position:absolute;right:18px;bottom:12px;color:#4e4563;font-size:10px}
+@media(max-width:700px){.modal{width:92%;padding:22px}.title{font-size:30px}.shop-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="canvasWrap">
+<canvas id="bgCanvas" width="1280" height="800"></canvas>
+<div id="game">
+  <div id="topbar">
+    <div class="hudBox"><div class="hudLabel">ANTE</div><div id="hudAnte" class="hudValue">1</div></div>
+    <div class="hudBox"><div class="hudLabel">ROUND</div><div id="hudRound" class="hudValue">1</div></div>
+    <div class="hudBox"><div class="hudLabel">GOLD</div><div id="hudGold" class="hudValue" style="color:var(--gold)">10</div></div>
+    <div class="hudBox"><div class="hudLabel">HANDS</div><div id="hudHands" class="hudValue">4</div></div>
+    <div class="hudBox"><div class="hudLabel">DISCARDS</div><div id="hudDiscards" class="hudValue">3</div></div>
+    <div id="opponentBox"><div id="oppName" class="oppName">The Regular</div><div id="jokerTicker" class="oppLine">"Another round? Suit yourself."</div></div>
+  </div>
+  <div id="relicBar"></div>
+  <main id="main">
+    <div id="scorePanel">
+      <div><div class="hudLabel">HAND</div><div id="handRankText">—</div><div id="handRankScore">select cards</div></div>
+      <div><div class="hudLabel">SCORE</div><div class="score"><span id="hudScore">0</span> <span style="color:var(--dim)">/</span> <span id="hudTarget" class="target">100</span></div></div>
+    </div>
+    <div id="handArea"></div>
+    <div id="controls">
+      <button id="btnPlay" class="btn primary">PLAY HAND <small>[ENTER]</small></button>
+      <button id="btnDiscard" class="btn danger">DISCARD <small>[BACKSPACE]</small></button>
+      <button id="btnSort" class="btn">SORT: RANK <small>[S]</small></button>
+    </div>
+  </main>
+  <div id="bottom"><div id="logBar"></div><div id="saveStatus">AUTO-SAVE ENABLED</div></div>
+  <div id="floatText"></div><div id="screenFlash"></div>
+
+  <section id="startScreen" class="screen"></section></div>button></button>small></button>div></span>iv></div>/div>div>div>div>div></div>""    <div class="modal"></div>
+      <h1 class="""title">ARCADE OF LOST HANDS</h1>
+      <div class="subtitle">A HAUNTED POKER ROGUELIKE</div>
+      <p class="""summary">Build your deck. Chase stronger poker hands. Collect cursed relics. Survive the endless arcade.</p>
+      <button id="btnStart" class="btn primary" style="margin-top:22px;font-size:18px">ENTER THE ARCADE</button>
+      <button id="btnClearSave" class="btn" style="margin-top:22px;margin-left:8px">CLEAR SAVE</button>
+    </div>
+  </section>
+
+  <section id="""winScreen" class="screen hidden">
+    <div class=""modal"></div>
+      <h1 style="color:var(--green)">ROUND CLEARED</h1>
+      <p id="winSummary" class="summary"></p>><div id="winRewards"></div>
+      <button id="""btnContinue" class="""btn primary" style="margin-top:25px">CONTINUE</button>
+    </div>
+  </section>
+
+  <section id="overScreen" class="screen hidden">
+    <div class="""modal">
+      <h1 style="color:var(--pink)">RUN ENDED</h1>
+      <p id="overSummary" class="""summary"></p><div id="overStats"></div>
+      <button id="btnRetry" class="btn primary" style="margin-top:25px"></button>NEW RUN</button>
+    </div>
+  </section>
+
+  <section id="shopScreen" class="screen hidden">
+    <div class="modal">
+      <h1 style="color:var(--gold)"></h1>THE GHOST SHOP</h1><p id="shopFlavor" class="summary"></p></p>
+      <div id="shopGrid" class="shop-grid"></div>
+      <button id="btnReroll" class="btn">REROLL — 5G</button>
+      <button id="btnLeaveShop" class="btn primary">LEAVE SHOP</button>
+    </div>
+  </section>
+
+  <section id="eventScreen" class="screen hidden">
+    <div class="modal"></div>
+      <h1 id="eventTitle" style="color:var(--purple)"></h1>/h1>
+      <p id="eventFlavor" class="summary"></p></section>p>
+      <div id=""eventOptions" class="event-options"></div>
+    </div>
+  </body>section>
+</div>
+</div>
+
+<script></script>
+"use strict";
+
+/* ============================== AUDIO ============================== */
+const Audio_ = (() => {
+  let ctx = null;
+  function ensure(){
+    if(!ctx) ctx=new(window.AudioContext||window.webkitAudioContext)();
+    if(ctx.state==="suspended")ctx.resume();
+    return ctx;
+  }
+  function tone(freq,dur,type="sine",vol=.12,delay=0,glide=null){
+    const ac=ensure(),o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime+delay;
+    o.type=type;o.frequency.setValueAtTime(freq,t);
+    if(glide)o.frequency.exponentialRampToValueAtTime(glide,t+dur);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.008);
+    g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(ac.destination);
+    o.start(t);o.stop(t+dur+.03);
+  }
+  function noise(dur,vol=.1,delay=0,filter=2500){
+    const ac=ensure(),n=Math.floor(ac.sampleRate*dur),b=ac.createBuffer(1,n,ac.sampleRate),d=b.getChannelData(0);
+    for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
+    const s=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();
+    f.type="lowpass";f.frequency.value=filter;g.gain.value=vol;s.buffer=b;s.connect(f).connect(g).connect(ac.destination);s.start(ac.currentTime+delay);
+  }
+  return{
+    unlock(){ensure()},
+    hover(){tone(600,.04,"sine",.035)},
+    select(){tone(720,.07,"triangle",.1);tone(1080,.05,"sine",.05,.02)},
+    deselect(){tone(420,.06,"triangle",.07)},
+    deal(i=0){tone(500+i*30,.08,"square",.04,i*.025)},
+    discard(){noise(.16,.12,0,2200);tone(180,.14,"sawtooth",.06)},
+    score(i=0){tone(440+i*55,.09,"square",.08);tone(660+i*30,.08,"sine",.06,.03)},
+    buy(){tone(500,.07,"square",.08);tone(900,.09,"sine",.07,.04)},
+    error(){tone(150,.14,"sawtooth",.1)},
+    relic(){tone(880,.18,"sine",.1);tone(1320,.14,"sine",.07,.05)},
+    shuffle(){for(let i=0;i<6;i++)noise(.04,.045,i*.025,3000+Math.random()*1800)},
+    win(){[0,4,7,11,12].forEach((s,i)=>tone(261*Math.pow(2,s/12),.3,"sine",.09,i*.07))},
+    lose(){tone(300,.4,"sawtooth",.12,0,90);noise(.4,.1,.04,800)},
+    ambient(){
+      const ac=ensure();[110,165,220].forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.type="sine";o.frequency.value=f;g.gain.value=.0001;g.gain.linearRampToValueAtTime(.01,ac.currentTime+2+i);o.connect(g).connect(ac.destination);o.start()})
+    }
+  };
+})();
+
+/* ============================== DATA ============================== */
+const SUITS=["spades","hearts","clubs","diamonds"];
+const SUIT_SYMBOL={spades:"♠",hearts:"♥",clubs:"♣",diamonds:"♦"};
+const RANKS=["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
+const RANK_ORDER={"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,J:11,Q:12,K:13,A:14};
+
+const ENHANCEMENTS={
+none:{name:"",desc:"",color:"#888"},
+glow:{name:"GLOW",desc:"+30 Chips when scored",color:"#2de8ff",chips:30},
+volatile:{name:"VOLATILE",desc:"×1.5 Mult when scored",color:"#ff2d95",multMul:1.5},
+frozen:{name:"FROZEN",desc:"+4 Mult, 0 Chips when scored",color:"#7fe8ff",mult:4,chipsOverride:0},
+molten:{name:"MOLTEN",desc:"+80 Chips, −2 Mult",color:"#ff6a3b",chips:80,mult:-2},
+golden:{name:"GOLDEN",desc:"+3 Gold when scored",color:"#ffd23f",goldOnScore:3},
+ghost:{name:"GHOST",desc:"Counts twice for scoring",color:"#c9c4ff",duplicate:true},
+cursed:{name:"CURSED",desc:"×2 Mult; −1 hand size",color:"#8b2fff",multMul:2,handSizePenalty:1},
+lucky:{name:"LUCKY",desc:"25% chance: +20 Mult",color:"#39ff88",luckyMult:20,luckyChance:.25},
+steel:{name:"STEEL",desc:"×1.2 Mult while held",color:"#c9c4ff",holdMultMul:1.2},
+bonus:{name:"BONUS",desc:"+50 Chips when scored",color:"#39ff88",chips:50}
+};
+
+let uid=0;
+function makeCard(rank,suit,enh="none"){return{uid:++uid,rank,suit,enhancement:enh,selected:false}}
+function freshDeck(){let d=[];for(const s of SUITS)for(const r of RANKS)d.push(makeCard(r,s));return d}
+
+const HAND_TYPES=[
+{id:"high_card",name:"High Card",baseChips:5,baseMult:1},
+{id:"pair",name:"Pair",baseChips:10,baseMult:2},
+{id:"two_pair",name:"Two Pair",baseChips:20,baseMult:2},
+{id:"three_kind",name:"Three of a Kind",baseChips:30,baseMult:3},
+{id:"straight",name:"Straight",baseChips:30,baseMult:4},
+{id:"flush",name:"Flush",baseChips:35,baseMult:4},
+{id:"full_house",name:"Full House",baseChips:40,baseMult:4},
+{id:"four_kind",name:"Four of a Kind",baseChips:60,baseMult:7},
+{id:"straight_flush",name:"Straight Flush",baseChips:100,baseMult:8},
+{id:"five_kind",name:"Five of a Kind",baseChips:120,baseMult:12},
+{id:"flush_house",name:"Flush House",baseChips:140,baseMult:14},
+{id:"flush_five",name:"Flush Five",baseChips:160,baseMult:16}
+];
+const opponents=[
+["The Regular","♠",'"Another round? Suit yourself."'],
+["Coat-Check Ghost","�",'"I have been holding this ticket for forty years."'],
+["The Jackpot Widow","♛",'"I remember when this machine paid out. Once."'],
+["Neon Marionette","🎭",'"Someone else is pulling these strings."'],
+["The Pit Boss","♦",'"House rules. Always house rules."'],
+["Static Bride","♠",'"He never came back from the card room."'],
+["The Last Customer","☠",'"They locked the doors. I just... stayed."'],
+["Vending Machine Saint","✦",'"Insert coin. Insert soul."'],
+["The Dealer","🃏",'"You are not leaving with more than you came with."'],
+["Arcade Architect","⌘",'"I built every wall in this place."']
+];
+
+const RELIC_POOL=[
+{id:"coin_teeth",name:"Coin-Teeth Mask",icon:"🎭",price:6,desc:"+1 Gold whenever you play a hand.",onHandScored:s=>s.gold++},
+{id:"static_ring",name:"Static Ring",icon:"💍",price:7,desc:"+15 Chips per Spade scored.",onCardScored:(s,c)=>c.suit==="spades"?{chips:15}:null},
+{id:"wilted_rose",name:"Wilted Rose",icon:"🥀",price:7,desc:"+15 Chips per Heart scored.",onCardScored:(s,c)=>c.suit==="hearts"?{chips:15}:null},
+{id:"iron_key",name:"Rusted Key",icon:"🔑",price:7,desc:"+15 Chips per Club scored.",onCardScored:(s,c)=>c.suit==="clubs"?{chips:15}:null},
+{id:"glass_tear",name:"Glass Tear",icon:"💧",price:7,desc:"+15 Chips per Diamond scored.",onCardScored:(s,c)=>c.suit==="diamonds"?{chips:15}:null},
+{id:"gambler_die",name:"Loaded Die",icon:"🎲",price:9,desc:"+3 Mult with a 5-card hand.",onHandScored:(s,r)=>{if(r.cardsPlayedCount===5)s.mult+=3}},
+{id:"broken_hourglass",name:"Broken Hourglass",icon:"⏳",price:8,desc:"+1 discard each round.",onRoundStart:s=>{s.discardsMax++;s.discardsLeft++}},
+{id:"extra_hand",name:"Phantom Hand",icon:"✋",price:10,desc:"+1 hand each round.",onRoundStart:s=>{s.handsMax++;s.handsLeft++}},
+{id:"black_candle",name:"Black Candle",icon:"🕯",price:9,desc:"×1.5 Mult for Pair+ non-flush/straight hands.",onHandScored:(s,r)=>{if(["pair","two_pair","three_kind","full_house","four_kind","five_kind"].includes(r.typeId))s.mult*=1.5}},
+{id:"cracked_mirror",name:"Cracked Mirror",icon:"🪞",price:11,desc:"Face cards: +8 Chips and +1 Mult.",onCardScored:(s,c)=>["J","Q","K"].includes(c.rank)?{chips:8,mult:1}:null},
+{id:"aces_wild",name:"Ace's Wild",icon:"🃏",price:12,desc:"Aces: +40 Chips and ×1.3 Mult.",onCardScored:(s,c)=>c.rank==="A"?{chips:40,multMul:1.3}:null},
+{id:"void_chip",name:"Void Chip",icon:"⚫",price:13,desc:"Every 3rd hand: ×2 Mult.",onRoundStart:s=>s._void=0,onHandScored:s=>{s._void++;if(s._void%3===0)s.mult*=2}},
+{id:"arcade_token",name:"Arcade Token",icon:"🪙",price:8,desc:"+5 Gold each round.",onRoundStart:s=>s.gold+=5},
+{id:"moth_jar",name:"Jar of Moths",icon:"🫙",price:10,desc:"+2 Mult per unique suit.",onHandScored:(s,r)=>s.mult+=new Set(r.cardsPlayed.map(c=>c.suit)).size*2},
+{id:"puppet_string",name:"Puppet Strings",icon:"🧵",price:9,desc:"First hand: ×2 Chips.",onRoundStart:s=>s._puppet=false,onHandScored:s=>{if(!s._puppet){s.chips*=2;s._puppet=true}}},
+{id:"static_tv",name:"Static TV",icon:"📺",price:12,desc:"+1 Mult per card left in deck, max +15.",onHandScored:s=>s.mult+=Math.min(15,s.drawPile.length)},
+{id:"hungry_ghost",name:"Hungry Ghost",icon:"👻",price:11,desc:"Discarded cards add +4 Chips to next hand.",onDiscard:(s,n)=>s._ghost=(s._ghost||0)+n*4,onHandScored:s=>{s.chips+=(s._ghost||0);s._ghost=0}},
+{id:"gilded_frame",name:"Gilded Frame",icon:"🖼",price:14,desc:"+25 Chips/+2 Mult on Full House+.",onHandScored:(s,r)=>{if(["full_house","four_kind","straight_flush","five_kind","flush_house","flush_five"].includes(r.typeId)){s.chips+=25;s.mult+=2}}},
+{id:"spiral_clock",name:"Spiral Clock",icon:"🕰",price:15,desc:"Reduces target scaling.",},
+{id:"dead_battery",name:"Dead Battery",icon:"🔋",price:6,desc:"−1 hand size, +2 Mult.",onRoundStart:s=>s.handSize--,onHandScored:s=>s.mult+=2}
+];
+
+function evaluateHand(cards){
+  if(!cards.length)return{typeId:"high_card",scoringCards:[]};
+  const groups={};for(const c of cards)(groups[c.rank]??=[]).push(c);
+  const rg=Object.values(groups).sort((a,b)=>b.length-a.length||RANK_ORDER[b[0].rank]-RANK_ORDER[a[0].rank]);
+  const counts=rg.map(g=>g.length);
+  const flush=cards.length===5&&cards.every(c=>c.suit===cards[0].suit);
+  let straight=false;
+  if(cards.length===5){
+    const v=[...new Set(cards.map(c=>RANK_ORDER[c.rank]))].sort((a,b)=>a-b);
+    straight=(v.length===5&&(v[4]-v[0]===4||JSON.stringify(v)==="[2,3,4,5,14]"));
+  }
+  let type="high_card",sc=cards.slice();
+  if(counts[0]===5&&flush)type="flush_five";
+  else if(counts[0]===5)type="five_kind";
+  else if(straight&&flush)type="straight_flush";
+  else if(counts[0]===4){type="four_kind";sc=rg[0]}
+  else if(counts[0]===3&&counts[1]===2&&flush)type="flush_house";
+  else if(counts[0]===3&&counts[1]===2){type="full_house";sc=[...rg[0],...rg[1]]}
+  else if(flush)type="flush";
+  else if(straight)type="straight";
+  else if(counts[0]===3){type="three_kind";sc=rg[0]}
+  else if(counts[0]===2&&counts[1]===2){type="two_pair";sc=[...rg[0],...rg[1]]}
+  else if(counts[0]===2){type="pair";sc=rg[0]}
+  else sc=[cards.slice().sort((a,b)=>RANK_ORDER[b.rank]-RANK_ORDER[a.rank])[0]];
+  return{typeId:type,scoringCards:sc};
+}
+const byId=id=>HAND_TYPES.find(x=>x.id===id);
+const choice=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const fmt=n=>Math.floor(n).toLocaleString("en-US");
+
+/* ============================== STATE ============================== */
+function newState(){
+ return{deck:freshDeck(),drawPile:[],hand:[],discardPile:[],relics:[],handLevels:{},gold:10,ante:1,round:1,score:0,target:0,handsMax:4,handsLeft:4,discardsMax:3,discardsLeft:3,handSize:8,permHandSizeBonus:0,phase:"start",opponent:null,totalHandsPlayed:0,totalGoldEarned:0,highest:{},_void:0,_puppet:false,_ghost:0};
+}
+let S=newState(),sortMode="rank",shopStock=[];
+
+function handLevel(id){return S.handLevels[id]||1}
+function stats(id){let h=byId(id),l=handLevel(id);return{chips:h.baseChips+(l-1)*Math.round(h.baseChips*.6),mult:h.baseMult+(l-1)}}
+function targetForRound(a,r){const g=S.relics.some(x=>x.id==="spiral_clock")?1.24:1.34;return Math.round(100*Math.pow(g,a-1)*([1,1.3,1.7][r-1]||1.7))}
+function save(){
+ const data={...S,drawPile:[],hand:[],discardPile:[],opponent:null};
+ localStorage.setItem("aolh_save",JSON.stringify(data));
+ document.getElementById("saveStatus").textContent="AUTO-SAVED";
+}
+function loadSave(){
+ try{const x=JSON.parse(localStorage.getItem("aolh_save"));if(!x)return false;
+  S={...newState(),...x};S.relics=(x.relics||[]).map(saved=>RELIC_POOL.find(r=>r.id===saved.id)).filter(Boolean);return true;
+ }catch(e){return false}
+}
+
+/* ============================== UI ============================== */
+const $=id=>document.getElementById(id);
+function log(msg,color="#8a80b0"){const d=document.createElement("div");d.textContent=msg;d.style.color=color;$("logBar").prepend(d);while($("logBar").children.length>14)$("logBar").lastChild.remove()}
+function floatNumber(t,x,y,color="#2de8ff",size=22){const d=document.createElement("div");d.className="float-num";d.textContent=t;d.style.cssText=`left:${x}px;top:${y}px;color:${color};font-size:${size}px`;$("floatText").appendChild(d);setTimeout(()=>d.remove(),950)}
+function flash(color="255,255,255",peak=.25,dur=250){const e=$("screenFlash");e.style.background=`rgb(${color})`;e.style.transition="none";e.style.opacity=peak;requestAnimationFrame(()=>{e.style.transition=`opacity ${dur}ms ease-out`;e.style.opacity=0})}
+function selected(){return S.hand.filter(c=>c.selected)}
+function renderHand(){
+ const a=$("handArea");a.innerHTML="";
+ S.hand.forEach(c=>{
+  const d=document.createElement("div"),e=ENHANCEMENTS[c.enhancement];d.className=`card suit-${c.suit}${c.selected?" selected":""}`;
+  d.innerHTML=`<div class="card-rank">${c.rank}</div><div class="card-suit">${SUIT_SYMBOL[c.suit]}</div><div class="card-keyword" style="color:${e.color}">${e.name}</div>`;
+  if(c.enhancement!=="none")d.style.boxShadow=`0 5px 18px #000b,0 0 15px ${e.color}55`;
+  d.onclick=()=>toggle(c.uid);d.onmouseenter=()=>Audio_.hover();a.appendChild(d);
+ });
+}
+function toggle(uid_){let c=S.hand.find(x=>x.uid===uid_);if(!c)return;if(!c.selected&&selected().length>=5){Audio_.error();return}c.selected=!c.selected;Audio_[c.selected?"select":"deselect"]();renderAll()}
+function renderPreview(){
+ let s=selected(),rt=$("handRankText"),rs=$("handRankScore");
+ if(!s.length){rt.textContent="—";rs.textContent="select cards";return}
+ let r=evaluateHand(s),st=stats(r.typeId);rt.textContent=`${byId(r.typeId).name} (Lv.${handLevel(r.typeId)})`;rs.textContent=`${st.chips} chips × ${st.mult} mult = ${fmt(st.chips*st.mult)}`
+}
+function renderRelics(){
+ $("relicBar").innerHTML=S.relics.map(r=>`<div class="relic"></div>{r.icon}<div class="tooltip"></div><b style="color:var(--gold)">${r.name}</b>b><br>${r.desc}</div></div>`).join("")
+}
+function renderHUD(){
+ $("hudAnte").textContent=S.ante;$("hudRound").textContent=S.round;$("hudGold").textContent=fmt(S.gold);$("hudHands").textContent=S.handsLeft;$("hudDiscards").textContent=S.discardsLeft;
+ $("hudScore").textContent=fmt(S.score);$("hudTarget").textContent=fmt(S.target);
+ $("btnPlay").disabled=S.phase!=="playing"||!selected().length||S.handsLeft<=0;
+ $("btnDiscard").disabled=S.phase!=="playing"||!selected().length||S.discardsLeft<=0;
+}
+function renderAll(){sortHand();renderHand();renderRelics();renderHUD();renderPreview()}
+function sortHand(){S.hand.sort((a,b)=>sortMode==="rank"?RANK_ORDER[b.rank]-RANK_ORDER[a.rank]:SUITS.indexOf(a.suit)-SUITS.indexOf(b.suit)||RANK_ORDER[b.rank]-RANK_ORDER[a.rank])}
+
+/* ============================== ROUND ============================== */
+function opponentForAnte(a){let i=Math.min(opponents.length-1,Math.floor((a-1)/1.2));return opponents[i]}
+function drawToHand(){
+ while(S.hand.length<S.handSize){
+  if(!S.drawPile.length){if(!S.discardPile.length)break;S.drawPile=shuffle(S.discardPile);S.discardPile=[]}
+  let c=S.drawPile.pop();if(c){c.selected=false;S.hand.push(c);Audio_.deal(S.hand.length-1)}
+ }
+}
+function startRound(){
+ S.phase="playing";S.score=0;S.target=targetForRound(S.ante,S.round);S.opponent=opponentForAnte(S.ante);S.handsMax=4;S.handsLeft=4;S.discardsMax=3;S.discardsLeft=3;S.handSize=8+S.permHandSizeBonus;
+ for(const r of S.relics)r.onRoundStart?.(S);
+ S.drawPile=shuffle(S.deck.map(c=>({...c,selected:false})));S.hand=[];S.discardPile=[];drawToHand();
+ $("oppName").textContent=S.opponent[0];$("jokerTicker").textContent=S.opponent[2];log(`— Round ${S.round} vs ${S.opponent[0]} —`,"#a742ff");Audio_.shuffle();renderAll();save()
+}
+function discardSelected(){
+ if(S.phase!=="playing")return;let sel=selected();if(!sel.length||S.discardsLeft<=0){Audio_.error();return}
+ S.discardsLeft--;S.relics.forEach(r=>r.onDiscard?.(S,sel.length));S.hand=S.hand.filter(c=>!c.selected);S.discardPile.push(...sel);Audio_.discard();drawToHand();renderAll();save()
+}
+function playSelected(){
+ if(S.phase!=="playing")return;let sel=selected();if(!sel.length||S.handsLeft<=0){Audio_.error();return}
+ S.handsLeft--;S.totalHandsPlayed++;
+ const ev=evaluateHand(sel),st=stats(ev.typeId);S.chips=st.chips;S.mult=st.mult;
+ // Enhancement effects
+ for(const c of sel){
+  const e=ENHANCEMENTS[c.enhancement];
+  if(e.chips)S.chips+=e.chips;
+  if(e.chipsOverride!==undefined)S.chips=e.chipsOverride;
+  if(e.mult)S.mult+=e.mult;
+  if(e.multMul)S.mult*=e.multMul;
+  if(e.luckyChance&&Math.random()<e.luckyChance)S.mult+=e.luckyMult;
+  if(e.goldOnScore)S.gold+=e.goldOnScore;
+  if(e.duplicate)S.chips+=stats(ev.typeId).chips*.15;
+ }
+ const result={typeId:ev.typeId,cardsPlayed:sel,cardsPlayedCount:sel.length,scoringCards:ev.scoringCards};
+ $("handRankText").textContent=byId(ev.typeId).name;Audio_.score();
+ animateCards(result,()=>{
+   S.relics.forEach(r=>r.onHandScored?.(S,result));
+   // Steel cards remaining in hand
+   for(const c of S.hand)if(c.enhancement==="steel")S.mult*=1.2;
+   const gained=Math.max(0,Math.round(S.chips*S.mult));S.score+=gained;S.highest[ev.typeId]=Math.max(S.highest[ev.typeId]||0,gained);
+   floatNumber("+"+fmt(gained),620,390,"#ffd23f",32);flash("255,210,63",.16,220);
+   S.hand=S.hand.filter(c=>!c.selected);S.discardPile.push(...sel);drawToHand();checkEnd();renderAll();save()
+ })
+}
+function animateCards(result,done){
+ const ids=new Set(result.scoringCards.map(c=>c.uid));result.cardsPlayed.forEach((c,i)=>setTimeout(()=>{
+  if(ids.has(c.uid)){Audio_.score(i);const e=ENHANCEMENTS[c.enhancement];if(e.name)floatNumber(e.name,220+i*90,600,e.color,13)}
+ },i*120));setTimeout(done,result.cardsPlayed.length*120+250)
+}
+function checkEnd(){if(S.score>=S.target)winRound();else if(S.handsLeft<=0)loseRound()}
+function winRound(){
+ S.phase="won";Audio_.win();flash("57,255,136",.24,400);let reward=4+S.ante+S.handsLeft*2;S.gold+=reward;S.totalGoldEarned+=reward;
+ $("winSummary").textContent=`${S.opponent[0]} fades back into the static.`;$("winRewards").innerHTML=`<div style="color:var(--gold);font-size:22px">+${reward} Gold</div><div class="summary">${S.handsLeft} unused hand(s) × 2g bonus</div>`;$("winScreen").classList.remove("hidden");save()
+}
+function loseRound(){
+ S.phase="gameover";Audio_.lose();$("overSummary").textContent=`${S.opponent[0]} takes what you owe.`;
+ $("overStats").innerHTML=`<div class="statLine"><span></span>eached</span><b></b>Ante ${S.ante}, Round ${S.round}</b></div><div class="statLine"><span>Score</span><b></b>{fmt(S.score)} / ${fmt(S.target)}</div>b></div><div class="statLine"><span>Hands played</span><b></b>{S.totalHandsPlayed}</b></div><div class="statLine"></div><span>Gold earned</span>pan><b>${fmt(S.totalGoldEarned)}</b>></div><div class="statLine"><span>Relics</span><b>${S.relics.length}</b>b></div>`;$("overScreen").classList.remove("hidden")
+}
+function proceed(){
+ $("winScreen").classList.add("hidden");S.round++;if(S.round>3){S.round=1;S.ante++}
+ Math.random()<.25&&S.round!==1?openEvent():openShop()
+}
+
+/* ============================== SHOP ============================== */
+function randomEnh(){return choice(Object.keys(ENHANCEMENTS).filter(x=>x!=="none"))}
+function buildShop(){
+ shopStock=[];for(let i=0;i<2;i++){let enh=Math.random()<.65?randomEnh():"none";shopStock.push({kind:"card",data:{rank:choice(RANKS),suit:choice(SUITS),enhancement:enh,price:enh==="none"?4:7}})}
+ let owned=new Set(S.relics.map(r=>r.id));shuffle(RELIC_POOL.filter(r=>!owned.has(r.id))).slice(0,2).forEach(r=>shopStock.push({kind:"relic",data:r}));
+ let h=choice(HAND_TYPES.filter(x=>x.id!=="flush_five"));shopStock.push({kind:"upgrade",data:{typeId:h.id,price:5+handLevel(h.id)*2}});
+ shopStock.push({kind:"voucher",data:{price:12}})
+}
+function openShop(){
+ S.phase="shop";buildShop();$("shopFlavor").textContent=choice(['"Everything has a price, friend. Yours especially."','"New stock. Do not ask where it came from."','"The house always restocks. Always."']);renderShop();$("shopScreen").classList.remove("hidden")
+}
+function renderShop(){
+ $("hudGold").textContent=fmt(S.gold);$("shopGrid").innerHTML="";
+ shopStock.forEach((it,i)=>{
+  let icon,name,desc,price=it.data.price;
+  if(it.kind==="card"){icon=SUIT_SYMBOL[it.data.suit];name=`${it.data.rank} of ${it.data.suit}`;desc=it.data.enhancement==="none"?"Adds this card to your deck.":ENHANCEMENTS[it.data.enhancement].desc}
+  if(it.kind==="relic"){icon=it.data.icon;name=it.data.name;desc=it.data.desc}
+  if(it.kind==="upgrade"){icon="⬆️";name=`Upgrade: ${byId(it.data.typeId).name}`;desc=`Lv.${handLevel(it.data.typeId)} → Lv.${handLevel(it.data.typeId)+1}`}
+  if(it.kind==="voucher"){icon="🃏";name="Hand Size Voucher";desc="+1 max hand size permanently."}
+  let d=document.createElement("div");d.className="shop-item"+(S.gold<price?" disabled":"");d.innerHTML=`<div class="shop-icon">${icon}</div><div class="name">${name}</div><div class="desc">${desc}</div><div class="price"></div>{price}g</div>`;d.onclick=()=>buy(i);$("shopGrid").appendChild(d)
+ })
+}
+function buy(i){
+ let it=shopStock[i],p=it.data.price;if(!it||S.gold<p){Audio_.error();return}S.gold-=p;
+ if(it.kind==="card"){let c=makeCard(it.data.rank,it.data.suit,it.data.enhancement);S.deck.push(c);log(`Bought ${c.rank} of ${c.suit}`,"#39ff88")}
+ if(it.kind==="relic"){S.relics.push(it.data);log(`Acquired relic: ${it.data.name}`,"#ffd23f");Audio_.relic()}
+ if(it.kind==="upgrade"){S.handLevels[it.data.typeId]=handLevel(it.data.typeId)+1;log(`${byId(it.data.typeId).name} upgraded!`,"#2de8ff")}
+ if(it.kind==="voucher"){S.permHandSizeBonus++;log("Hand size permanently increased!","#ffd23f")}
+ shopStock.splice(i,1);Audio_.buy();renderShop();save()
+}
+function reroll(){if(S.gold<5){Audio_.error();return}S.gold-=5;buildShop();renderShop();Audio_.buy();save()}
+function leaveShop(){$("shopScreen").classList.add("hidden");startRound()}
+
+/* ============================== EVENTS ============================== */
+const EVENTS=[
+["THE CIGARETTE MACHINE","It only takes memories now. Feed it one?",[
+["Trade 8 Gold for a random Relic",s=>{if(s.gold>=8){s.gold-=8;giveRelic(s)}else Audio_.error()}],
+["Walk away",()=>{}]]],
+["A CRACKED SLOT MACHINE","Pull the lever. It might cost you.",[
+["Pull it: random +15 Gold or −5 Gold",s=>{if(Math.random()<.5){s.gold+=15;log("The lever gives! +15 gold","#ffd23f");Audio_.buy()}else{s.gold=Math.max(0,s.gold-5);log("The lever bites back. −5 gold","#ff3b3b");Audio_.error()}}],
+["Leave it alone",()=>{}]]],
+["THE CARD SHARPENER","A rusted machine that can enhance one card in your deck.",[
+["Enhance a random card",s=>{if(s.deck.length){let c=choice(s.deck);c.enhancement=randomEnh();log(`${c.rank} of ${c.suit} became ${ENHANCEMENTS[c.enhancement].name}!`,ENHANCEMENTS[c.enhancement].color);Audio_.relic()}}],
+["Decline",()=>{}]]],
+["GHOST TOLL BOOTH",'"Pay the toll, or take the long way."',[
+["Pay 6 Gold: remove a card",s=>{if(s.gold>=6&&s.deck.length>5){s.gold-=6;s.deck.splice(Math.floor(Math.random()*s.deck.length),1);log("A card vanished from your deck.");Audio_.buy()}else Audio_.error()}],
+["Take the long way",()=>{}]]],
+["THE MEMORY VENDOR",'"I will trade you a boost. For now."',[
+["+2 max hands, −3 max discards",s=>{s.handsMax+=2;s.handsLeft+=2;s.discardsMax=Math.max(0,s.discardsMax-3);s.discardsLeft=Math.max(0,s.discardsLeft-3)}],
+["Decline",()=>{}]]]
+];
+function giveRelic(s){let owned=new Set(s.relics.map(r=>r.id)),pool=RELIC_POOL.filter(r=>!owned.has(r.id));if(!pool.length){s.gold+=10;return}s.relics.push(choice(pool));Audio_.relic();log(`New relic: ${s.relics.at(-1).name}!`,"#ffd23f")}
+function openEvent(){
+ S.phase="event";let e=choice(EVENTS);$("eventTitle").textContent=e[0];$("eventFlavor").textContent=e[1];$("eventOptions").innerHTML="";
+ e[2].forEach(o=>{let b=document.createElement("button");b.className="btn";b.textContent=o[0];b.onclick=()=>{o[1](S);$("eventScreen").classList.add("hidden");openShop();save()};$("eventOptions").appendChild(b)});$("eventScreen").classList.remove("hidden")
+}
+
+/* ============================== START / INPUT ============================== */
+function startNewRun(){
+ S=newState();["startScreen","overScreen","winScreen","shopScreen","eventScreen"].forEach(id=>$(id).classList.add("hidden"));startRound()
+}
+$("btnStart").onclick=()=>{Audio_.unlock();Audio_.ambient();startNewRun()};
+$("btnClearSave").onclick=()=>{localStorage.removeItem("aolh_save");S=newState();alert("Save cleared.")};
+$("btnRetry").onclick=()=>{ $("overScreen").classList.add("hidden");startNewRun() };
+$("btnPlay").onclick=playSelected;$("btnDiscard").onclick=discardSelected;
+$("btnSort").onclick=e=>{sortMode=sortMode==="rank"?"suit":"rank";e.currentTarget.innerHTML=`SORT: ${sortMode.toUpperCase()} <small>[S]</small>`;renderAll()};
+$("btnContinue").onclick=proceed;$("btnLeaveShop").onclick=leaveShop;$("btnReroll").onclick=reroll;
+window.addEventListener("keydown",e=>{if(e.target.tagName==="INPUT")return;if(S.phase!=="playing")return;if(e.key==="Enter")playSelected();if(e.key==="Backspace"||e.key==="Delete"){e.preventDefault();discardSelected()}if(e.key.toLowerCase()==="s")$("btnSort").click()});
+
+/* ============================== BACKGROUND ============================== */
+const canvas=$("bgCanvas"),ctx=canvas.getContext("2d"),W=1280,H=800;
+const particles=Array.from({length:65},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.3,vy:-Math.random()*.3-.03,r:.5+Math.random()*1.8,a:.1+Math.random()*.35}));
+const glyphs=Array.from({length:12},()=>({x:Math.random()*W,y:Math.random()*H,s:20+Math.random()*50,v:.05+Math.random()*.18,d:(Math.random()-.5)*.12,sym:choice(Object.values(SUIT_SYMBOL))}));
+let shake=0;
+function bg(){
+ ctx.clearRect(0,0,W,H);
+ let g=ctx.createRadialGradient(W/2,H*.85,50,W/2,H*.85,700);g.addColorStop(0,"rgba(167,66,255,.12)");g.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ glyphs.forEach(x=>{x.y-=x.v;x.x+=x.d;if(x.y<-80){x.y=H+80;x.x=Math.random()*W}ctx.font=`${x.s}px serif`;ctx.fillStyle="rgba(200,180,255,.055)";ctx.fillText(x.sym,x.x,x.y)});
+ particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.y<-10){p.y=H+10;p.x=Math.random()*W}ctx.beginPath();ctx.fillStyle=`hsla(${choice([190,270,300,45])},100%,70%,${p.a})`;ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()});
+ let sy=(performance.now()/16)%1000-100,sg=ctx.createLinearGradient(0,sy-40,0,sy+40);sg.addColorStop(0,"transparent");sg.addColorStop(.5,"rgba(45,232,255,.035)");sg.addColorStop(1,"transparent");ctx.fillStyle=sg;ctx.fillRect(0,sy-40,W,80);
+ requestAnimationFrame(bg)
+}
+function fit(){let scale=Math.min(innerWidth/1280,innerHeight/800,1);$("canvasWrap").style.transform=`scale(${scale})`}
+addEventListener("resize",fit);fit();bg();
+
+/* ============================== BOOT ============================== */
+if(loadSave()){
+ $("startScreen").classList.remove("hidden");
+ log("Saved run found. Starting a new run will overwrite it.","#ffd23f");
+}
+log("Welcome to the Arcade of Lost Hands.","#a742ff");
+</script>
+</body>
+</html>�
