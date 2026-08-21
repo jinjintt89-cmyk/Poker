@@ -1,7 +1,7 @@
 Jump Right In
 Want to start playing immediately? Just head over to the Live Demo in your web browser. There's zero setup required—no downloads, no installations, just instant fun.
 
-✨ Why It’s Awesome
+
 Lightning Fast: Because it's deployed straight to Vercel, the game loads in a flash.
 
 Full Poker Experience: You get complete, interactive poker gameplay right on your screen.
