@@ -12,6 +12,6 @@ Running It Locally
 
 
 Download or clone this repository to your machine.
-Double click the Hello.html file to open it in your browser. That's it.
+Double click the Hello.html file to open it in your browser or open, https://poker1-inky.vercel.app/
 
 Writin By Jainil
