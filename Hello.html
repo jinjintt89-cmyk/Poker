@@ -1,17 +1,30 @@
-<!-- HTML structure remains functional -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Poker Game</title>
+    <style>
+        body { background: #1a1a1a; color: #fff; font-family: sans-serif; text-align: center; }
+        #canvasWrap { position: relative; width: 800px; margin: 20px auto; }
+        #handArea { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        .card { width: 70px; height: 100px; border: 2px solid #fff; border-radius: 8px; background: #fff; color: #000; display: flex; flex-direction: column; justify-content: space-between; padding: 8px; cursor: pointer; user-select: none; box-sizing: border-box; }
+        .card.selected { border-color: #ffd700; transform: translateY(-10px); }
+        .card.suit-hearts, .card.suit-diamonds { color: #d00; }
+    </style>
+</head>
+<body>
+
 <div id="canvasWrap">
-    <canvas id="bgCanvas" width="1280" height="800"></canvas>
+    <canvas id="bgCanvas" width="800" height="150"></canvas>
     <div id="game">
-        <!-- [HUD and UI elements] -->
+        <div id="hud">Gold: <span id="gold">10</span></div>
+        <div id="handArea"></div>
     </div>
 </div>
+
 <script>
 "use strict";
-/* 
- * AUDIO ENGINE 
- * Note: I'm using the Web Audio API here. It's a bit finicky, 
- * but it works well enough for simple beeps. 
- */
+
 const SoundManager = (() => {
     let audioContext = null;
     function getContext() {
@@ -23,8 +36,7 @@ const SoundManager = (() => {
         }
         return audioContext;
     }
-    // Helper to play a tone. 
-    // TODO: Maybe add a proper ADSR envelope later? It's a bit harsh right now.
+
     function playTone(freq, duration, type="sine", volume=0.12, delay=0, glide=null) {
         const ctx = getContext();
         const osc = ctx.createOscillator();
@@ -46,111 +58,93 @@ const SoundManager = (() => {
         osc.start(time);
         osc.stop(time + duration + 0.03);
     }
+
     return {
         unlock: () => getContext(),
         hover: () => playTone(600, 0.04, "sine", 0.035),
         select: () => {
             playTone(720, 0.07, "triangle", 0.1);
             playTone(1080, 0.05, "sine", 0.05, 0.02);
-        },
-        // ... [rest of sound functions]
+        }
     };
 })();
-/* 
- * GAME DATA 
- * I'm using a global 'gameState' object. I know, I know, globals are bad,
- * but for a small jam game like this, it's just easier to manage.
- */
+
 const SUITS = ["spades", "hearts", "clubs", "diamonds"];
 const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+
 let gameState = {
     deck: [],
     hand: [],
     gold: 10,
     ante: 1,
     round: 1,
-    score: 0,
-    // ... [other properties]
+    score: 0
 };
-// Helper: Make a new card object
-function createCard(rank, suit, enhancement = "none") {
+
+function createCard(rank, suit) {
     return {
-        uid: Math.random().toString(36).substr(2, 9), // Using random ID instead of global counter
+        uid: Math.random().toString(36).substring(2, 9),
         rank: rank,
         suit: suit,
-        enhancement: enhancement,
         selected: false
     };
 }
-/* 
- * HAND EVALUATION
- * This logic is a bit messy. I had to handle the straight/flush detection 
- * manually because I didn't want to import a heavy library.
- */
-function evaluateHand(cards) {
-    if (!cards || cards.length === 0) {
-        return { typeId: "high_card", scoringCards: [] };
-    }
-    // Group by rank to find pairs/trips/quads
-    const groups = {};
-    cards.forEach(card => {
-        if (!groups[card.rank]) groups[card.rank] = [];
-        groups[card.rank].push(card);
-    });
-    // ... [logic to determine hand type]
-    // I think this covers all cases, but need to test 5-of-a-kind again.
-    return { typeId: "high_card", scoringCards: cards }; 
-}
-/* 
- * UI RENDERING
- * I'm manually manipulating the DOM here. React would be overkill, 
- * but man, this gets tedious.
- */
+
 function renderHand() {
     const handArea = document.getElementById("handArea");
+    if (!handArea) return;
+    
     handArea.innerHTML = "";
     gameState.hand.forEach(card => {
         const cardEl = document.createElement("div");
-        cardEl.className = "card suit-" + card.suit;
-        if (card.selected) {
-            cardEl.classList.add("selected");
-        }
-        // Add the content
+        cardEl.className = `card suit-${card.suit}${card.selected ? ' selected' : ''}`;
+        
         cardEl.innerHTML = `
             <div class="card-rank">${card.rank}</div>
             <div class="card-suit">${card.suit}</div>
         `;
+        
         cardEl.onclick = function() {
-            // Toggle selection
+            SoundManager.select();
             card.selected = !card.selected;
             renderAll();
         };
+        
         handArea.appendChild(cardEl);
     });
 }
+
 function renderAll() {
-    // Just a wrapper to update everything
     renderHand();
-    // updateHUD();
-    // renderRelics();
+    const goldEl = document.getElementById("gold");
+    if (goldEl) goldEl.textContent = gameState.gold;
 }
-// Initializing the game
+
 function initGame() {
-    console.log("Initializing game state...");
-    // Reset everything
     gameState.deck = [];
-    // Build the initial deck
+    gameState.hand = [];
+
+    // Build deck
     for (let s of SUITS) {
         for (let r of RANKS) {
             gameState.deck.push(createCard(r, s));
         }
     }
-    // Shuffle logic...
+
+    // Fisher-Yates shuffle algorithm
+    for (let i = gameState.deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [gameState.deck[i], gameState.deck[j]] = [gameState.deck[j], gameState.deck[i]];
+    }
+
+    // Draw initial 5 cards into hand
+    gameState.hand = gameState.deck.splice(0, 5);
+
     renderAll();
 }
-// Start the game
+
+window.addEventListener("click", () => SoundManager.unlock(), { once: true });
 initGame();
 </script>
 </body>
 </html>
-<!--
