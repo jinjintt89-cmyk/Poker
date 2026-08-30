@@ -23,51 +23,53 @@
 <script>
 "use strict";
 
-// synth SFX instead of sample files - keeps the whole game in one HTML file
-const SoundManager = (() => {
-  let audioCtx = null;
+// lazy-init the audio context - chrome/safari refuse to let it start
+// until there's been an actual user click, so this just waits
+let actx;
+function audio() {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (actx.state === "suspended") actx.resume(); // safari does this randomly even after unlocking
+  return actx;
+}
 
-  function getCtx() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === "suspended") audioCtx.resume();
-    return audioCtx;
+// simple synth beep, no sample files. took a few tries to kill the click/pop
+// at the start of the note, the exponential ramp fixed it
+function tone(freq, len, type, vol, delay, slideTo) {
+  type = type || "sine";
+  vol = vol || 0.12;
+  delay = delay || 0;
+  const ctx = audio();
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  const startAt = ctx.currentTime + delay;
+
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, startAt);
+  if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, startAt + len);
+
+  g.gain.setValueAtTime(0.0001, startAt);
+  g.gain.exponentialRampToValueAtTime(vol, startAt + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, startAt + len);
+
+  osc.connect(g);
+  g.connect(ctx.destination);
+  osc.start(startAt);
+  osc.stop(startAt + len + 0.03);
+}
+
+const sfx = {
+  unlock: audio,
+  hover: function () { tone(600, 0.04, "sine", 0.035); },
+  select: function () {
+    tone(720, 0.07, "triangle", 0.1);
+    tone(1080, 0.05, "sine", 0.05, 0.02); // little harmonic on top, sounds more "clicky"
   }
-
-  function beep(freq, dur, type = "sine", vol = 0.12, delay = 0, glideTo = null) {
-    const ac = getCtx();
-    const osc = ac.createOscillator();
-    const gain = ac.createGain();
-    const t = ac.currentTime + delay;
-
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, t);
-    if (glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, t + dur);
-
-    // exponential ramp avoids the click you get from a hard on/off gain
-    gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(vol, t + 0.008);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-
-    osc.connect(gain);
-    gain.connect(ac.destination);
-    osc.start(t);
-    osc.stop(t + dur + 0.03);
-  }
-
-  return {
-    unlock: getCtx,
-    hover: () => beep(600, 0.04, "sine", 0.035),
-    select: () => {
-      beep(720, 0.07, "triangle", 0.1);
-      beep(1080, 0.05, "sine", 0.05, 0.02);
-    }
-  };
-})();
+};
 
 const SUITS = ["spades", "hearts", "clubs", "diamonds"];
 const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
 
-let state = {
+let game = {
   deck: [],
   hand: [],
   gold: 10,
@@ -76,52 +78,62 @@ let state = {
   score: 0
 };
 
-function makeCard(rank, suit) {
-  return { uid: Math.random().toString(36).slice(2, 9), rank, suit, selected: false };
+function newCard(rank, suit) {
+  return { uid: Math.random().toString(36).slice(2, 9), rank: rank, suit: suit, selected: false };
 }
 
-function renderHand() {
-  const handArea = document.getElementById("handArea");
-  if (!handArea) return;
+function drawHandArea() {
+  const wrap = document.getElementById("handArea");
+  if (!wrap) return;
 
-  handArea.innerHTML = "";
-  state.hand.forEach(card => {
-    const cardEl = document.createElement("div");
-    cardEl.className = `card suit-${card.suit}${card.selected ? " selected" : ""}`;
-    cardEl.innerHTML = `
-      <div class="card-rank">${card.rank}</div>
-      <div class="card-suit">${card.suit}</div>
-    `;
-    cardEl.onclick = () => {
-      SoundManager.select();
+  wrap.innerHTML = "";
+  for (const card of game.hand) {
+    const div = document.createElement("div");
+    div.className = "card suit-" + card.suit + (card.selected ? " selected" : "");
+    div.innerHTML = "<div class='card-rank'>" + card.rank + "</div><div class='card-suit'>" + card.suit + "</div>";
+    div.onclick = function () {
+      sfx.select();
       card.selected = !card.selected;
-      renderAll();
+      redraw();
     };
-    handArea.appendChild(cardEl);
-  });
-}
-
-function renderAll() {
-  renderHand();
-  const goldEl = document.getElementById("gold");
-  if (goldEl) goldEl.textContent = state.gold;
-}
-
-function initGame() {
-  state.deck = SUITS.flatMap(suit => RANKS.map(rank => makeCard(rank, suit)));
-
-  // fisher-yates - only way to get an unbiased shuffle
-  for (let i = state.deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [state.deck[i], state.deck[j]] = [state.deck[j], state.deck[i]];
+    wrap.appendChild(div);
   }
-
-  state.hand = state.deck.splice(0, 5);
-  renderAll();
 }
 
-window.addEventListener("click", () => SoundManager.unlock(), { once: true });
-initGame();
+function redraw() {
+  drawHandArea();
+  const goldEl = document.getElementById("gold");
+  if (goldEl) goldEl.textContent = game.gold;
+}
+
+function shuffle(arr) {
+  // fisher-yates - first attempt was arr.sort(() => Math.random() - 0.5)
+  // which LOOKS random but isn't actually uniform, some cards kept clustering.
+  // this is the version that's actually unbiased
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+  }
+  return arr;
+}
+
+function startGame() {
+  game.deck = [];
+  for (const suit of SUITS) {
+    for (const rank of RANKS) {
+      game.deck.push(newCard(rank, suit));
+    }
+  }
+  shuffle(game.deck);
+
+  game.hand = game.deck.splice(0, 5);
+  redraw();
+}
+
+window.addEventListener("click", function () { sfx.unlock(); }, { once: true });
+startGame();
 </script>
 </body>
 </html>
