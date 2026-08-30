@@ -23,14 +23,14 @@
 <script>
 "use strict";
 
-// quick and dirty tone generator, no sample files needed
+// synth SFX instead of sample files - keeps the whole game in one HTML file
 const SoundManager = (() => {
-  let ctx = null;
+  let audioCtx = null;
 
   function getCtx() {
-    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-    if (ctx.state === "suspended") ctx.resume();
-    return ctx;
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
   }
 
   function beep(freq, dur, type = "sine", vol = 0.12, delay = 0, glideTo = null) {
@@ -43,6 +43,7 @@ const SoundManager = (() => {
     osc.frequency.setValueAtTime(freq, t);
     if (glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, t + dur);
 
+    // exponential ramp avoids the click you get from a hard on/off gain
     gain.gain.setValueAtTime(0.0001, t);
     gain.gain.exponentialRampToValueAtTime(vol, t + 0.008);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
@@ -76,11 +77,7 @@ let state = {
 };
 
 function makeCard(rank, suit) {
-  return {
-    uid: Math.random().toString(36).slice(2, 9),
-    rank, suit,
-    selected: false
-  };
+  return { uid: Math.random().toString(36).slice(2, 9), rank, suit, selected: false };
 }
 
 function renderHand() {
@@ -88,20 +85,20 @@ function renderHand() {
   if (!handArea) return;
 
   handArea.innerHTML = "";
-  for (const card of state.hand) {
-    const el = document.createElement("div");
-    el.className = `card suit-${card.suit}${card.selected ? " selected" : ""}`;
-    el.innerHTML = `
+  state.hand.forEach(card => {
+    const cardEl = document.createElement("div");
+    cardEl.className = `card suit-${card.suit}${card.selected ? " selected" : ""}`;
+    cardEl.innerHTML = `
       <div class="card-rank">${card.rank}</div>
       <div class="card-suit">${card.suit}</div>
     `;
-    el.onclick = () => {
+    cardEl.onclick = () => {
       SoundManager.select();
       card.selected = !card.selected;
       renderAll();
     };
-    handArea.appendChild(el);
-  }
+    handArea.appendChild(cardEl);
+  });
 }
 
 function renderAll() {
@@ -111,16 +108,9 @@ function renderAll() {
 }
 
 function initGame() {
-  state.deck = [];
-  state.hand = [];
+  state.deck = SUITS.flatMap(suit => RANKS.map(rank => makeCard(rank, suit)));
 
-  for (const s of SUITS) {
-    for (const r of RANKS) {
-      state.deck.push(makeCard(r, s));
-    }
-  }
-
-  // fisher-yates
+  // fisher-yates - only way to get an unbiased shuffle
   for (let i = state.deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [state.deck[i], state.deck[j]] = [state.deck[j], state.deck[i]];
