@@ -1,16 +1,1 @@
-A simple poker game which you can play directly in your browser at https://poker1-inky.vercel.app/
-
-Description
-
-This project was built by me over the weekend. This game uses html code and vercel app which allows you to convert html to a url.  
-
-Controls
-Backspace: Discards the card
-Enter: Play hands
-
-Features
-- Interactive card ui
-- html code
-
-Future Plans
-I hope to continue buidling code in the future and hopefully a coding engineer. 
+A quick poker game that you can play right from your browser on https://poker1-inky.vercel.app/ Description This game was made over a weekend and me. It is html only on vercel an app that will turn your html code into a link. Controls Backspace: discards the card Enter : to play a hand Features HTML code Interactive card UI FuturePlans hopefully more code and to eventually become an engineer
