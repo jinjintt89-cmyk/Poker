@@ -4,152 +4,3216 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Arcade of Lost Hands</title>
+
 <style>
-:root{
-  --bg:#070510;--panel:#100b1b;--panel2:#171025;--line:#30204a;
-  --text:#eee9ff;--dim:#9389ae;--cyan:#2de8ff;--pink:#ff2d95;
-  --purple:#a742ff;--gold:#ffd23f;--green:#39ff88;--red:#ff3b3b;
+:root {
+  --bg: #070510;
+  --panel: #100b1b;
+  --panel2: #171025;
+  --line: #30204a;
+  --text: #eee9ff;
+  --dim: #9389ae;
+  --cyan: #2de8ff;
+  --pink: #ff2d95;
+  --purple: #a742ff;
+  --gold: #ffd23f;
+  --green: #39ff88;
+  --red: #ff3b3b;
 }
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05030a;color:var(--text);font-family:Inter,system-ui,Segoe UI,sans-serif;position:relative}
-button{font:inherit}
-#canvasWrap{position:absolute;left:50%;top:50%;width:1280px;height:800px;overflow:hidden;background:#090611;border:1px solid #241735;box-shadow:0 0 60px #000}
-#bgCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:0}
-#game{position:absolute;inset:0;z-index:1}
-.hidden{display:none!important}
-.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(4,2,10,.78);backdrop-filter:blur(5px);z-index:30}
-.modal{width:760px;max-height:690px;overflow:auto;padding:34px;background:linear-gradient(145deg,#171025,#0c0815);border:1px solid #4b326a;border-radius:18px;box-shadow:0 25px 90px #000;text-align:center}
-.title{font-size:48px;letter-spacing:5px;color:var(--cyan);text-shadow:0 0 18px #2de8ff55;margin:0 0 8px}
-.subtitle{color:var(--dim);letter-spacing:2px;margin-bottom:30px}
-.btn{border:1px solid #4a3566;background:#171024;color:var(--text);padding:12px 18px;border-radius:9px;cursor:pointer;transition:.15s;box-shadow:0 5px 15px #0005}
-.btn:hover:not(:disabled){transform:translateY(-2px);border-color:var(--cyan);box-shadow:0 0 18px #2de8ff22}
-.btn:disabled{opacity:.35;cursor:not-allowed}
-.btn.primary{border-color:var(--cyan);color:var(--cyan)}
-.btn.danger{border-color:var(--pink);color:#ff78b9}
-#topbar{height:82px;display:flex;align-items:center;gap:12px;padding:12px 18px;background:#0b0712e8;border-bottom:1px solid #2b1b42}
-.hudBox{min-width:90px;padding:8px 12px;background:#120c1d;border:1px solid #2b1d40;border-radius:8px}
-.hudLabel{font-size:10px;color:var(--dim);letter-spacing:1px}.hudValue{font-size:20px;font-weight:800}
-#opponentBox{margin-left:auto;text-align:right;max-width:430px}.oppName{color:var(--pink);font-weight:800}.oppLine{font-size:12px;color:var(--dim)}
-#relicBar{position:absolute;left:18px;top:94px;display:flex;gap:7px;z-index:5}
-.relic{position:relative;width:40px;height:40px;border:1px solid #4a3263;border-radius:8px;background:#130c20;display:grid;place-items:center;font-size:21px;cursor:help}
-.tooltip{display:none;position:absolute;left:0;top:47px;width:250px;padding:9px;background:#08050d;border:1px solid #5c3d7b;border-radius:7px;font-size:11px;text-align:left;z-index:20}
-.relic:hover .tooltip{display:block}
-#main{position:absolute;left:0;right:0;top:82px;bottom:150px;padding:22px 30px;display:flex;flex-direction:column}
-#scorePanel{display:flex;align-items:center;justify-content:center;gap:80px;height:125px}
-#handRankText{font-size:28px;color:var(--cyan);font-weight:800}
-#handRankScore{font-size:14px;color:var(--dim);margin-top:5px}
-.score{font-size:42px;font-weight:900}.target{color:var(--gold)}
-#handArea{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;min-height:280px}
-.card{width:112px;height:170px;background:linear-gradient(145deg,#f7f4ff,#d9d3e8);color:#181321;border-radius:10px;border:2px solid #aaa2b8;position:relative;cursor:pointer;box-shadow:0 7px 16px #0009;transition:.14s;user-select:none}
-.card:hover{transform:translateY(-10px);box-shadow:0 15px 25px #000c}
-.card.selected{transform:translateY(-22px);border-color:var(--cyan);box-shadow:0 0 22px #2de8ff77,0 15px 25px #000c}
-.suit-hearts .card-rank,.suit-hearts .card-suit,.suit-diamonds .card-rank,.suit-diamonds .card-suit{color:#d92857}
-.card-rank{position:absolute;left:10px;top:8px;font-size:28px;font-weight:900}
-.card-suit{position:absolute;left:12px;top:42px;font-size:30px}
-.card-keyword{position:absolute;bottom:8px;left:5px;right:5px;text-align:center;font-size:9px;font-weight:900;letter-spacing:1px}
-#controls{display:flex;justify-content:center;gap:12px;align-items:center}
-#bottom{position:absolute;left:0;right:0;bottom:0;height:150px;border-top:1px solid #2b1b42;background:#0b0712e8;padding:10px 18px}
-#logBar{height:82px;overflow:hidden;font-size:11px;line-height:17px;color:var(--dim);display:flex;flex-direction:column;justify-content:flex-end}
-#jokerTicker{color:#77698e;font-size:12px;text-align:center;margin-bottom:8px}
-#floatText{position:absolute;inset:0;pointer-events:none;z-index:50}
-.float-num{position:absolute;font-weight:900;text-shadow:0 2px 8px #000;animation:floatUp .95s ease-out forwards}
-@keyframes floatUp{0%{opacity:0;transform:translateY(10px) scale(.8)}15%{opacity:1}100%{opacity:0;transform:translateY(-70px) scale(1.08)}}
-#screenFlash{position:absolute;inset:0;z-index:45;pointer-events:none;opacity:0}
-.shop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0}
-.shop-item{padding:18px;min-height:165px;border:1px solid #3b2853;border-radius:12px;background:#110b1b;cursor:pointer}
-.shop-item:hover:not(.disabled){border-color:var(--gold);transform:translateY(-2px)}
-.shop-item.disabled{opacity:.4;cursor:not-allowed}
-.shop-icon{font-size:30px;margin-bottom:8px}.shop-item .name{font-weight:800}.shop-item .desc{font-size:11px;color:var(--dim);margin:8px 0;min-height:35px}.price{color:var(--gold);font-weight:800}
-.event-options{display:flex;flex-direction:column;gap:12px;margin-top:25px}
-.summary{color:var(--dim);line-height:1.7}
-.statLine{display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #271a39}
-#saveStatus{position:absolute;right:18px;bottom:12px;color:#4e4563;font-size:10px}
-@media(max-width:700px){.modal{width:92%;padding:22px}.title{font-size:30px}.shop-grid{grid-template-columns:1fr}}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #05030a;
+  color: var(--text);
+  font-family: Inter, system-ui, "Segoe UI", sans-serif;
+}
+
+button {
+  font: inherit;
+}
+
+#canvasWrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1280px;
+  height: 800px;
+  overflow: hidden;
+  background: #090611;
+  border: 1px solid #241735;
+  box-shadow: 0 0 60px #000;
+}
+
+#bgCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+#game {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 2, 10, .78);
+  backdrop-filter: blur(5px);
+  z-index: 30;
+}
+
+.modal {
+  width: 760px;
+  max-height: 690px;
+  overflow: auto;
+  padding: 34px;
+  background: linear-gradient(145deg, #171025, #0c0815);
+  border: 1px solid #4b326a;
+  border-radius: 18px;
+  box-shadow: 0 25px 90px #000;
+  text-align: center;
+}
+
+.title {
+  margin: 0 0 8px;
+  color: var(--cyan);
+  font-size: 48px;
+  letter-spacing: 5px;
+  text-shadow: 0 0 18px #2de8ff55;
+}
+
+.subtitle {
+  margin-bottom: 30px;
+  color: var(--dim);
+  letter-spacing: 2px;
+}
+
+.btn {
+  padding: 12px 18px;
+  border: 1px solid #4a3566;
+  border-radius: 9px;
+  background: #171024;
+  color: var(--text);
+  cursor: pointer;
+  transition: .15s;
+  box-shadow: 0 5px 15px #0005;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: var(--cyan);
+  box-shadow: 0 0 18px #2de8ff22;
+}
+
+.btn:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+.btn.primary {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+.btn.danger {
+  border-color: var(--pink);
+  color: #ff78b9;
+}
+
+#topbar {
+  height: 82px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  background: #0b0712e8;
+  border-bottom: 1px solid #2b1b42;
+}
+
+.hudBox {
+  min-width: 90px;
+  padding: 8px 12px;
+  background: #120c1d;
+  border: 1px solid #2b1d40;
+  border-radius: 8px;
+}
+
+.hudLabel {
+  color: var(--dim);
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.hudValue {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+#opponentBox {
+  margin-left: auto;
+  max-width: 430px;
+  text-align: right;
+}
+
+.oppName {
+  color: var(--pink);
+  font-weight: 800;
+}
+
+.oppLine {
+  color: var(--dim);
+  font-size: 12px;
+}
+
+#relicBar {
+  position: absolute;
+  left: 18px;
+  top: 94px;
+  display: flex;
+  gap: 7px;
+  z-index: 5;
+}
+
+.relic {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #4a3263;
+  border-radius: 8px;
+  background: #130c20;
+  font-size: 21px;
+  cursor: help;
+}
+
+.tooltip {
+  position: absolute;
+  left: 0;
+  top: 47px;
+  display: none;
+  width: 250px;
+  padding: 9px;
+  background: #08050d;
+  border: 1px solid #5c3d7b;
+  border-radius: 7px;
+  color: var(--text);
+  font-size: 11px;
+  text-align: left;
+  z-index: 20;
+}
+
+.relic:hover .tooltip {
+  display: block;
+}
+
+#main {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 82px;
+  bottom: 150px;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 30px;
+}
+
+#scorePanel {
+  height: 125px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 80px;
+}
+
+#handRankText {
+  color: var(--cyan);
+  font-size: 28px;
+  font-weight: 800;
+}
+
+#handRankScore {
+  margin-top: 5px;
+  color: var(--dim);
+  font-size: 14px;
+}
+
+.score {
+  font-size: 42px;
+  font-weight: 900;
+}
+
+.target {
+  color: var(--gold);
+}
+
+#handArea {
+  flex: 1;
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+
+.card {
+  position: relative;
+  width: 112px;
+  height: 170px;
+  background: linear-gradient(145deg, #f7f4ff, #d9d3e8);
+  color: #181321;
+  border: 2px solid #aaa2b8;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 7px 16px #0009;
+  transition: .14s;
+  user-select: none;
+}
+
+.card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 25px #000c;
+}
+
+.card.selected {
+  transform: translateY(-22px);
+  border-color: var(--cyan);
+  box-shadow:
+    0 0 22px #2de8ff77,
+    0 15px 25px #000c;
+}
+
+.suit-hearts .card-rank,
+.suit-hearts .card-suit,
+.suit-diamonds .card-rank,
+.suit-diamonds .card-suit {
+  color: #d92857;
+}
+
+.card-rank {
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.card-suit {
+  position: absolute;
+  left: 12px;
+  top: 42px;
+  font-size: 30px;
+}
+
+.card-keyword {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  bottom: 8px;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+#controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+#bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 150px;
+  padding: 10px 18px;
+  background: #0b0712e8;
+  border-top: 1px solid #2b1b42;
+}
+
+#logBar {
+  height: 82px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  color: var(--dim);
+  font-size: 11px;
+  line-height: 17px;
+}
+
+#jokerTicker {
+  margin-bottom: 8px;
+  color: #77698e;
+  font-size: 12px;
+  text-align: center;
+}
+
+#floatText {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.float-num {
+  position: absolute;
+  font-weight: 900;
+  text-shadow: 0 2px 8px #000;
+  animation: floatUp .95s ease-out forwards;
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(.8);
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-70px) scale(1.08);
+  }
+}
+
+#screenFlash {
+  position: absolute;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.shop-item {
+  min-height: 165px;
+  padding: 18px;
+  background: #110b1b;
+  border: 1px solid #3b2853;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.shop-item:hover:not(.disabled) {
+  transform: translateY(-2px);
+  border-color: var(--gold);
+}
+
+.shop-item.disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+.shop-icon {
+  margin-bottom: 8px;
+  font-size: 30px;
+}
+
+.shop-item .name {
+  font-weight: 800;
+}
+
+.shop-item .desc {
+  min-height: 35px;
+  margin: 8px 0;
+  color: var(--dim);
+  font-size: 11px;
+}
+
+.price {
+  color: var(--gold);
+  font-weight: 800;
+}
+
+.event-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.summary {
+  color: var(--dim);
+  line-height: 1.7;
+}
+
+.statLine {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid #271a39;
+}
+
+#saveStatus {
+  position: absolute;
+  right: 18px;
+  bottom: 12px;
+  color: #4e4563;
+  font-size: 10px;
+}
+
+@media (max-width: 700px) {
+  .modal {
+    width: 92%;
+    padding: 22px;
+  }
+
+  .title {
+    font-size: 30px;
+  }
+
+  .shop-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
 </head>
+
 <body>
+
 <div id="canvasWrap">
-<canvas id="bgCanvas" width="1280" height="800"></canvas>
-<div id="game">
-  <div id="topbar">
-    <div class="hudBox"><div class="hudLabel">ANTE</div><div id="hudAnte" class="hudValue">1</div></div>
-    <div class="hudBox"><div class="hudLabel">ROUND</div><div id="hudRound" class="hudValue">1</div></div>
-    <div class="hudBox"><div class="hudLabel">GOLD</div><div id="hudGold" class="hudValue" style="color:var(--gold)">10</div></div>
-    <div class="hudBox"><div class="hudLabel">HANDS</div><div id="hudHands" class="hudValue">4</div></div>
-    <div class="hudBox"><div class="hudLabel">DISCARDS</div><div id="hudDiscards" class="hudValue">3</div></div>
-    <div id="opponentBox"><div id="oppName" class="oppName">The Regular</div><div id="jokerTicker" class="oppLine">"Another round? Suit yourself."</div></div>
+
+  <canvas id="bgCanvas" width="1280" height="800"></canvas>
+
+  <div id="game">
+
+    <div id="topbar">
+      <div class="hudBox">
+        <div class="hudLabel">ANTE</div>
+        <div id="hudAnte" class="hudValue">1</div>
+      </div>
+
+      <div class="hudBox">
+        <div class="hudLabel">ROUND</div>
+        <div id="hudRound" class="hudValue">1</div>
+      </div>
+
+      <div class="hudBox">
+        <div class="hudLabel">GOLD</div>
+        <div id="hudGold" class="hudValue" style="color:var(--gold)">10</div>
+      </div>
+
+      <div class="hudBox">
+        <div class="hudLabel">HANDS</div>
+        <div id="hudHands" class="hudValue">4</div>
+      </div>
+
+      <div class="hudBox">
+        <div class="hudLabel">DISCARDS</div>
+        <div id="hudDiscards" class="hudValue">3</div>
+      </div>
+
+      <div id="opponentBox">
+        <div id="oppName" class="oppName">The Regular</div>
+        <div id="jokerTicker" class="oppLine">
+          "Another round? Suit yourself."
+        </div>
+      </div>
+    </div>
+
+    <div id="relicBar"></div>
+
+    <main id="main">
+
+      <div id="scorePanel">
+        <div>
+          <div class="hudLabel">HAND</div>
+          <div id="handRankText">—</div>
+          <div id="handRankScore">select cards</div>
+        </div>
+
+        <div>
+          <div class="hudLabel">SCORE</div>
+          <div class="score">
+            <span id="hudScore">0</span>
+            <span style="color:var(--dim)">/</span>
+            <span id="hudTarget" class="target">100</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="handArea"></div>
+
+      <div id="controls">
+        <button id="btnPlay" class="btn primary">
+          PLAY HAND <small>[ENTER]</small>
+        </button>
+
+        <button id="btnDiscard" class="btn danger">
+          DISCARD <small>[BACKSPACE]</small>
+        </button>
+
+        <button id="btnSort" class="btn">
+          SORT: RANK <small>[S]</small>
+        </button>
+      </div>
+
+    </main>
+
+    <div id="bottom">
+      <div id="logBar"></div>
+      <div id="saveStatus">AUTO-SAVE ENABLED</div>
+    </div>
+
+    <div id="floatText"></div>
+    <div id="screenFlash"></div>
+
+    <section id="startScreen" class="screen">
+      <div class="modal">
+        <h1 class="title">ARCADE OF LOST HANDS</h1>
+        <div class="subtitle">A HAUNTED POKER ROGUELIKE</div>
+
+        <p class="summary">
+          Build your deck. Chase stronger poker hands.
+          Collect cursed relics. Survive the endless arcade.
+        </p>
+
+        <button
+          id="btnStart"
+          class="btn primary"
+          style="margin-top:22px;font-size:18px">
+          ENTER THE ARCADE
+        </button>
+
+        <button
+          id="btnClearSave"
+          class="btn"
+          style="margin-top:22px;margin-left:8px">
+          CLEAR SAVE
+        </button>
+      </div>
+    </section>
+
+    <section id="winScreen" class="screen hidden">
+      <div class="modal">
+        <h1 style="color:var(--green)">ROUND CLEARED</h1>
+        <p id="winSummary" class="summary"></p>
+        <div id="winRewards"></div>
+
+        <button
+          id="btnContinue"
+          class="btn primary"
+          style="margin-top:25px">
+          CONTINUE
+        </button>
+      </div>
+    </section>
+
+    <section id="overScreen" class="screen hidden">
+      <div class="modal">
+        <h1 style="color:var(--pink)">RUN ENDED</h1>
+        <p id="overSummary" class="summary"></p>
+        <div id="overStats"></div>
+
+        <button
+          id="btnRetry"
+          class="btn primary"
+          style="margin-top:25px">
+          NEW RUN
+        </button>
+      </div>
+    </section>
+
+    <section id="shopScreen" class="screen hidden">
+      <div class="modal">
+        <h1 style="color:var(--gold)">THE GHOST SHOP</h1>
+
+        <p id="shopFlavor" class="summary"></p>
+
+        <div id="shopGrid" class="shop-grid"></div>
+
+        <button id="btnReroll" class="btn">
+          REROLL — 5G
+        </button>
+
+        <button id="btnLeaveShop" class="btn primary">
+          LEAVE SHOP
+        </button>
+      </div>
+    </section>
+
+    <section id="eventScreen" class="screen hidden">
+      <div class="modal">
+        <h1 id="eventTitle" style="color:var(--purple)"></h1>
+        <p id="eventFlavor" class="summary"></p>
+        <div id="eventOptions" class="event-options"></div>
+      </div>
+    </section>
+
   </div>
-  <div id="relicBar"></div>
-  <main id="main">
-    <div id="scorePanel">
-      <div><div class="hudLabel">HAND</div><div id="handRankText">—</div><div id="handRankScore">select cards</div></div>
-      <div><div class="hudLabel">SCORE</div><div class="score"><span id="hudScore">0</span> <span style="color:var(--dim)">/</span> <span id="hudTarget" class="target">100</span></div></div>
-    </div>
-    <div id="handArea"></div>
-    <div id="controls">
-      <button id="btnPlay" class="btn primary">PLAY HAND <small>[ENTER]</small></button>
-      <button id="btnDiscard" class="btn danger">DISCARD <small>[BACKSPACE]</small></button>
-      <button id="btnSort" class="btn">SORT: RANK <small>[S]</small></button>
-    </div>
-  </main>
-  <div id="bottom"><div id="logBar"></div><div id="saveStatus">AUTO-SAVE ENABLED</div></div>
-  <div id="floatText"></div><div id="screenFlash"></div>
-
-  <section id="startScreen" class="screen">
-    <div class="modal">
-      <h1 class="title">ARCADE OF LOST HANDS</h1>
-      <div class="subtitle">A HAUNTED POKER ROGUELIKE</div>
-      <p class="summary">Build your deck. Chase stronger poker hands. Collect cursed relics. Survive the endless arcade.</p>
-      <button id="btnStart" class="btn primary" style="margin-top:22px;font-size:18px">ENTER THE ARCADE</button>
-      <button id="btnClearSave" class="btn" style="margin-top:22px;margin-left:8px">CLEAR SAVE</button>
-    </div>
-  </section>
-
-  <section id="winScreen" class="screen hidden">
-    <div class="modal">
-      <h1 style="color:var(--green)">ROUND CLEARED</h1>
-      <p id="winSummary" class="summary"></p>
-      <div id="winRewards"></div>
-      <button id="btnContinue" class="btn primary" style="margin-top:25px">CONTINUE</button>
-    </div>
-  </section>
-
-  <section id="overScreen" class="screen hidden">
-    <div class="modal">
-      <h1 style="color:var(--pink)">RUN ENDED</h1>
-      <p id="overSummary" class="summary"></p>
-      <div id="overStats"></div>
-      <button id="btnRetry" class="btn primary" style="margin-top:25px">NEW RUN</button>
-    </div>
-  </section>
-
-  <section id="shopScreen" class="screen hidden">
-    <div class="modal">
-      <h1 style="color:var(--gold)">THE GHOST SHOP</h1>
-      <p id="shopFlavor" class="summary"></p>
-      <div id="shopGrid" class="shop-grid"></div>
-      <button id="btnReroll" class="btn">REROLL — 5G</button>
-      <button id="btnLeaveShop" class="btn primary">LEAVE SHOP</button>
-    </div>
-  </section>
-
-  <section id="eventScreen" class="screen hidden">
-    <div class="modal">
-      <h1 id="eventTitle" style="color:var(--purple)"></h1>
-      <p id="eventFlavor" class="summary"></p>
-      <div id="eventOptions" class="event-options"></div>
-    </div>
-  </section>
-</div>
 </div>
 
 <script>
 "use strict";
 
-/* ============================== AUDIO ============================== */
-const Audio_ = (() => {
-  let ctx = null;
-  function ensure(){
-    if(!ctx) ctx=new(window.AudioContext||window.webkitAudioContext)();
-    if(ctx.state==="suspended")ctx.resume();
-    return ctx;
+/* ---------------------------------------------------------------
+   Audio
+   --------------------------------------------------------------- */
+
+const audio = (() => {
+  let context = null;
+
+  function getContext() {
+    if (!context) {
+      context = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    if (context.state === "suspended") {
+      context.resume();
+    }
+
+    return context;
+  }
+
+  function tone(
+    frequency,
+    duration,
+    type = "sine",
+    volume = .12,
+    delay = 0,
+    glide = null
+  ) {
+    const ac = getContext();
+    const oscillator = ac.createOscillator();
+    const gain = ac.createGain();
+    const startTime = ac.currentTime + delay;
+
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, startTime);
+
+    if (glide) {
+      oscillator.frequency.exponentialRampToValueAtTime(
+        glide,
+        startTime + duration
+      );
+    }
+
+    gain.gain.setValueAtTime(.0001, startTime);
+    gain.gain.exponentialRampToValueAtTime(
+      volume,
+      startTime + .008
+    );
+    gain.gain.exponentialRampToValueAtTime(
+      .0001,
+      startTime + duration
+    );
+
+    oscillator.connect(gain).connect(ac.destination);
+
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration + .03);
+  }
+
+  function noise(duration, volume = .1, delay = 0, filterFrequency = 2500) {
+    const ac = getContext();
+    const sampleCount = Math.floor(ac.sampleRate * duration);
+    const buffer = ac.createBuffer(1, sampleCount, ac.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < sampleCount; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / sampleCount);
+    }
+
+    const source = ac.createBufferSource();
+    const filter = ac.createBiquadFilter();
+    const gain = ac.createGain();
+
+    filter.type = "lowpass";
+    filter.frequency.value = filterFrequency;
+    gain.gain.value = volume;
+
+    source.buffer = buffer;
+    source.connect(filter).connect(gain).connect(ac.destination);
+    source.start(ac.currentTime + delay);
+  }
+
+  return {
+    unlock() {
+      getContext();
+    },
+
+    hover() {
+      tone(600, .04, "sine", .035);
+    },
+
+    select() {
+      tone(720, .07, "triangle", .1);
+      tone(1080, .05, "sine", .05, .02);
+    },
+
+    deselect() {
+      tone(420, .06, "triangle", .07);
+    },
+
+    deal(index = 0) {
+      tone(
+        500 + index * 30,
+        .08,
+        "square",
+        .04,
+        index * .025
+      );
+    },
+
+    discard() {
+      noise(.16, .12, 0, 2200);
+      tone(180, .14, "sawtooth", .06);
+    },
+
+    score(index = 0) {
+      tone(440 + index * 55, .09, "square", .08);
+      tone(660 + index * 30, .08, "sine", .06, .03);
+    },
+
+    buy() {
+      tone(500, .07, "square", .08);
+      tone(900, .09, "sine", .07, .04);
+    },
+
+    error() {
+      tone(150, .14, "sawtooth", .1);
+    },
+
+    relic() {
+      tone(880, .18, "sine", .1);
+      tone(1320, .14, "sine", .07, .05);
+    },
+
+    shuffle() {
+      for (let i = 0; i < 6; i++) {
+        noise(
+          .04,
+          .045,
+          i * .025,
+          3000 + Math.random() * 1800
+        );
+      }
+    },
+
+    win() {
+      const notes = [0, 4, 7, 11, 12];
+
+      notes.forEach((semitones, index) => {
+        tone(
+          261 * Math.pow(2, semitones / 12),
+          .3,
+          "sine",
+          .09,
+          index * .07
+        );
+      });
+    },
+
+    lose() {
+      tone(300, .4, "sawtooth", .12, 0, 90);
+      noise(.4, .1, .04, 800);
+    },
+
+    ambient() {
+      const ac = getContext();
+
+      [110, 165, 220].forEach((frequency, index) => {
+        const oscillator = ac.createOscillator();
+        const gain = ac.createGain();
+
+        oscillator.type = "sine";
+        oscillator.frequency.value = frequency;
+
+        gain.gain.value = .0001;
+        gain.gain.linearRampToValueAtTime(
+          .01,
+          ac.currentTime + 2 + index
+        );
+
+        oscillator.connect(gain).connect(ac.destination);
+        oscillator.start();
+      });
+    }
+  };
+})();
+
+
+/* ---------------------------------------------------------------
+   Card data
+   --------------------------------------------------------------- */
+
+const SUITS = [
+  "spades",
+  "hearts",
+  "clubs",
+  "diamonds"
+];
+
+const SUIT_SYMBOL = {
+  spades: "♠",
+  hearts: "♥",
+  clubs: "♣",
+  diamonds: "♦"
+};
+
+const RANKS = [
+  "2", "3", "4", "5", "6", "7",
+  "8", "9", "10", "J", "Q", "K", "A"
+];
+
+const RANK_ORDER = {
+  "2": 2,
+  "3": 3,
+  "4": 4,
+  "5": 5,
+  "6": 6,
+  "7": 7,
+  "8": 8,
+  "9": 9,
+  "10": 10,
+  J: 11,
+  Q: 12,
+  K: 13,
+  A: 14
+};
+
+const ENHANCEMENTS = {
+  none: {
+    name: "",
+    desc: "",
+    color: "#888"
+  },
+
+  glow: {
+    name: "GLOW",
+    desc: "+30 Chips when scored",
+    color: "#2de8ff",
+    chips: 30
+  },
+
+  volatile: {
+    name: "VOLATILE",
+    desc: "×1.5 Mult when scored",
+    color: "#ff2d95",
+    multMul: 1.5
+  },
+
+  frozen: {
+    name: "FROZEN",
+    desc: "+4 Mult, 0 Chips when scored",
+    color: "#7fe8ff",
+    mult: 4,
+    chipsOverride: 0
+  },
+
+  molten: {
+    name: "MOLTEN",
+    desc: "+80 Chips, −2 Mult",
+    color: "#ff6a3b",
+    chips: 80,
+    mult: -2
+  },
+
+  golden: {
+    name: "GOLDEN",
+    desc: "+3 Gold when scored",
+    color: "#ffd23f",
+    goldOnScore: 3
+  },
+
+  ghost: {
+    name: "GHOST",
+    desc: "Counts twice for scoring",
+    color: "#c9c4ff",
+    duplicate: true
+  },
+
+  cursed: {
+    name: "CURSED",
+    desc: "×2 Mult; −1 hand size",
+    color: "#8b2fff",
+    multMul: 2,
+    handSizePenalty: 1
+  },
+
+  lucky: {
+    name: "LUCKY",
+    desc: "25% chance: +20 Mult",
+    color: "#39ff88",
+    luckyMult: 20,
+    luckyChance: .25
+  },
+
+  steel: {
+    name: "STEEL",
+    desc: "×1.2 Mult while held",
+    color: "#c9c4ff",
+    holdMultMul: 1.2
+  },
+
+  bonus: {
+    name: "BONUS",
+    desc: "+50 Chips when scored",
+    color: "#39ff88",
+    chips: 50
+  }
+};
+
+let nextCardId = 0;
+
+function createCard(rank, suit, enhancement = "none") {
+  nextCardId++;
+
+  return {
+    uid: nextCardId,
+    rank,
+    suit,
+    enhancement,
+    selected: false
+  };
+}
+
+function createDeck() {
+  const deck = [];
+
+  for (const suit of SUITS) {
+    for (const rank of RANKS) {
+      deck.push(createCard(rank, suit));
+    }
+  }
+
+  return deck;
+}
+
+
+/* ---------------------------------------------------------------
+   Poker hands
+   --------------------------------------------------------------- */
+
+const HAND_TYPES = [
+  {
+    id: "high_card",
+    name: "High Card",
+    baseChips: 5,
+    baseMult: 1
+  },
+  {
+    id: "pair",
+    name: "Pair",
+    baseChips: 10,
+    baseMult: 2
+  },
+  {
+    id: "two_pair",
+    name: "Two Pair",
+    baseChips: 20,
+    baseMult: 2
+  },
+  {
+    id: "three_kind",
+    name: "Three of a Kind",
+    baseChips: 30,
+    baseMult: 3
+  },
+  {
+    id: "straight",
+    name: "Straight",
+    baseChips: 30,
+    baseMult: 4
+  },
+  {
+    id: "flush",
+    name: "Flush",
+    baseChips: 35,
+    baseMult: 4
+  },
+  {
+    id: "full_house",
+    name: "Full House",
+    baseChips: 40,
+    baseMult: 4
+  },
+  {
+    id: "four_kind",
+    name: "Four of a Kind",
+    baseChips: 60,
+    baseMult: 7
+  },
+  {
+    id: "straight_flush",
+    name: "Straight Flush",
+    baseChips: 100,
+    baseMult: 8
+  },
+  {
+    id: "five_kind",
+    name: "Five of a Kind",
+    baseChips: 120,
+    baseMult: 12
+  },
+  {
+    id: "flush_house",
+    name: "Flush House",
+    baseChips: 140,
+    baseMult: 14
+  },
+  {
+    id: "flush_five",
+    name: "Flush Five",
+    baseChips: 160,
+    baseMult: 16
+  }
+];
+
+const opponents = [
+  ["The Regular", "♠", '"Another round? Suit yourself."'],
+  ["Coat-Check Ghost", "🎫", '"I have been holding this ticket for forty years."'],
+  ["The Jackpot Widow", "♛", '"I remember when this machine paid out. Once."'],
+  ["Neon Marionette", "🎭", '"Someone else is pulling these strings."'],
+  ["The Pit Boss", "♦", '"House rules. Always house rules."'],
+  ["Static Bride", "♠", '"He never came back from the card room."'],
+  ["The Last Customer", "☠", '"They locked the doors. I just... stayed."'],
+  ["Vending Machine Saint", "✦", '"Insert coin. Insert soul."'],
+  ["The Dealer", "🃏", '"You are not leaving with more than you came with."'],
+  ["Arcade Architect", "⌘", '"I built every wall in this place."']
+];
+
+
+/* ---------------------------------------------------------------
+   Relics
+   --------------------------------------------------------------- */
+
+const RELIC_POOL = [
+  {
+    id: "coin_teeth",
+    name: "Coin-Teeth Mask",
+    icon: "🎭",
+    price: 6,
+    desc: "+1 Gold whenever you play a hand.",
+    onHandScored(game) {
+      game.gold++;
+    }
+  },
+
+  {
+    id: "static_ring",
+    name: "Static Ring",
+    icon: "💍",
+    price: 7,
+    desc: "+15 Chips per Spade scored.",
+    onCardScored(game, card) {
+      return card.suit === "spades"
+        ? { chips: 15 }
+        : null;
+    }
+  },
+
+  {
+    id: "wilted_rose",
+    name: "Wilted Rose",
+    icon: "🥀",
+    price: 7,
+    desc: "+15 Chips per Heart scored.",
+    onCardScored(game, card) {
+      return card.suit === "hearts"
+        ? { chips: 15 }
+        : null;
+    }
+  },
+
+  {
+    id: "iron_key",
+    name: "Rusted Key",
+    icon: "🔑",
+    price: 7,
+    desc: "+15 Chips per Club scored.",
+    onCardScored(game, card) {
+      return card.suit === "clubs"
+        ? { chips: 15 }
+        : null;
+    }
+  },
+
+  {
+    id: "glass_tear",
+    name: "Glass Tear",
+    icon: "💧",
+    price: 7,
+    desc: "+15 Chips per Diamond scored.",
+    onCardScored(game, card) {
+      return card.suit === "diamonds"
+        ? { chips: 15 }
+        : null;
+    }
+  },
+
+  {
+    id: "gambler_die",
+    name: "Loaded Die",
+    icon: "🎲",
+    price: 9,
+    desc: "+3 Mult with a 5-card hand.",
+    onHandScored(game, result) {
+      if (result.cardsPlayedCount === 5) {
+        game.mult += 3;
+      }
+    }
+  },
+
+  {
+    id: "broken_hourglass",
+    name: "Broken Hourglass",
+    icon: "⏳",
+    price: 8,
+    desc: "+1 discard each round.",
+    onRoundStart(game) {
+      game.discardsMax++;
+      game.discardsLeft++;
+    }
+  },
+
+  {
+    id: "extra_hand",
+    name: "Phantom Hand",
+    icon: "✋",
+    price: 10,
+    desc: "+1 hand each round.",
+    onRoundStart(game) {
+      game.handsMax++;
+      game.handsLeft++;
+    }
+  },
+
+  {
+    id: "black_candle",
+    name: "Black Candle",
+    icon: "🕯",
+    price: 9,
+    desc: "×1.5 Mult for Pair+ non-flush/straight hands.",
+    onHandScored(game, result) {
+      const affectedHands = [
+        "pair",
+        "two_pair",
+        "three_kind",
+        "full_house",
+        "four_kind",
+        "five_kind"
+      ];
+
+      if (affectedHands.includes(result.typeId)) {
+        game.mult *= 1.5;
+      }
+    }
+  },
+
+  {
+    id: "cracked_mirror",
+    name: "Cracked Mirror",
+    icon: "🪞",
+    price: 11,
+    desc: "Face cards: +8 Chips and +1 Mult.",
+    onCardScored(game, card) {
+      return ["J", "Q", "K"].includes(card.rank)
+        ? { chips: 8, mult: 1 }
+        : null;
+    }
+  },
+
+  {
+    id: "aces_wild",
+    name: "Ace's Wild",
+    icon: "🃏",
+    price: 12,
+    desc: "Aces: +40 Chips and ×1.3 Mult.",
+    onCardScored(game, card) {
+      return card.rank === "A"
+        ? { chips: 40, multMul: 1.3 }
+        : null;
+    }
+  },
+
+  {
+    id: "void_chip",
+    name: "Void Chip",
+    icon: "⚫",
+    price: 13,
+    desc: "Every 3rd hand: ×2 Mult.",
+
+    onRoundStart(game) {
+      game._void = 0;
+    },
+
+    onHandScored(game) {
+      game._void++;
+
+      if (game._void % 3 === 0) {
+        game.mult *= 2;
+      }
+    }
+  },
+
+  {
+    id: "arcade_token",
+    name: "Arcade Token",
+    icon: "🪙",
+    price: 8,
+    desc: "+5 Gold each round.",
+    onRoundStart(game) {
+      game.gold += 5;
+    }
+  },
+
+  {
+    id: "moth_jar",
+    name: "Jar of Moths",
+    icon: "🫙",
+    price: 10,
+    desc: "+2 Mult per unique suit.",
+
+    onHandScored(game, result) {
+      const suits = new Set();
+
+      result.cardsPlayed.forEach(card => {
+        suits.add(card.suit);
+      });
+
+      game.mult += suits.size * 2;
+    }
+  },
+
+  {
+    id: "puppet_string",
+    name: "Puppet Strings",
+    icon: "🧵",
+    price: 9,
+    desc: "First hand: ×2 Chips.",
+
+    onRoundStart(game) {
+      game._puppet = false;
+    },
+
+    onHandScored(game) {
+      if (!game._puppet) {
+        game.chips *= 2;
+        game._puppet = true;
+      }
+    }
+  },
+
+  {
+    id: "static_tv",
+    name: "Static TV",
+    icon: "📺",
+    price: 12,
+    desc: "+1 Mult per card left in deck, max +15.",
+
+    onHandScored(game) {
+      game.mult += Math.min(15, game.drawPile.length);
+    }
+  },
+
+  {
+    id: "hungry_ghost",
+    name: "Hungry Ghost",
+    icon: "👻",
+    price: 11,
+    desc: "Discarded cards add +4 Chips to next hand.",
+
+    onDiscard(game, amount) {
+      game._ghost = (game._ghost || 0) + amount * 4;
+    },
+
+    onHandScored(game) {
+      game.chips += game._ghost || 0;
+      game._ghost = 0;
+    }
+  },
+
+  {
+    id: "gilded_frame",
+    name: "Gilded Frame",
+    icon: "🖼",
+    price: 14,
+    desc: "+25 Chips/+2 Mult on Full House+.",
+
+    onHandScored(game, result) {
+      const strongHands = [
+        "full_house",
+        "four_kind",
+        "straight_flush",
+        "five_kind",
+        "flush_house",
+        "flush_five"
+      ];
+
+      if (strongHands.includes(result.typeId)) {
+        game.chips += 25;
+        game.mult += 2;
+      }
+    }
+  },
+
+  {
+    id: "spiral_clock",
+    name: "Spiral Clock",
+    icon: "🕰",
+    price: 15,
+    desc: "Reduces target scaling."
+  },
+
+  {
+    id: "dead_battery",
+    name: "Dead Battery",
+    icon: "🔋",
+    price: 6,
+    desc: "−1 hand size, +2 Mult.",
+
+    onRoundStart(game) {
+      game.handSize--;
+    },
+
+    onHandScored(game) {
+      game.mult += 2;
+    }
+  }
+];
+
+
+/* ---------------------------------------------------------------
+   Utility functions
+   --------------------------------------------------------------- */
+
+function getElement(id) {
+  return document.getElementById(id);
+}
+
+function findHandType(id) {
+  return HAND_TYPES.find(hand => hand.id === id);
+}
+
+function randomChoice(array) {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+function shuffle(array) {
+  const result = array.slice();
+
+  for (let i = result.length - 1; i > 0; i--) {
+    const randomIndex = Math.floor(Math.random() * (i + 1));
+
+    [result[i], result[randomIndex]] = [
+      result[randomIndex],
+      result[i]
+    ];
+  }
+
+  return result;
+}
+
+function formatNumber(value) {
+  return Math.floor(value).toLocaleString("en-US");
+}
+
+
+/* ---------------------------------------------------------------
+   Poker evaluation
+   --------------------------------------------------------------- */
+
+function evaluateHand(cards) {
+  if (!cards.length) {
+    return {
+      typeId: "high_card",
+      scoringCards: []
+    };
+  }
+
+  const groups = {};
+
+  for (const card of cards) {
+    if (!groups[card.rank]) {
+      groups[card.rank] = [];
+    }
+
+    groups[card.rank].push(card);
+  }
+
+  const rankedGroups = Object.values(groups).sort((a, b) => {
+    return (
+      b.length - a.length ||
+      RANK_ORDER[b[0].rank] - RANK_ORDER[a[0].rank]
+    );
+  });
+
+  const counts = rankedGroups.map(group => group.length);
+
+  const isFlush =
+    cards.length === 5 &&
+    cards.every(card => card.suit === cards[0].suit);
+
+  let isStraight = false;
+
+  if (cards.length === 5) {
+    const values = [
+      ...new Set(cards.map(card => RANK_ORDER[card.rank]))
+    ].sort((a, b) => a - b);
+
+    const normalStraight =
+      values.length === 5 &&
+      values[4] - values[0] === 4;
+
+    const wheelStraight =
+      values.join(",") === "2,3,4,5,14";
+
+    isStraight = normalStraight || wheelStraight;
+  }
+
+  let typeId = "high_card";
+  let scoringCards = cards.slice();
+
+  if (counts[0] === 5 && isFlush) {
+    typeId = "flush_five";
+  } else if (counts[0] === 5) {
+    typeId = "five_kind";
+  } else if (isStraight && isFlush) {
+    typeId = "straight_flush";
+  } else if (counts[0] === 4) {
+    typeId = "four_kind";
+    scoringCards = rankedGroups[0];
+  } else if (
+    counts[0] === 3 &&
+    counts[1] === 2 &&
+    isFlush
+  ) {
+    typeId = "flush_house";
+  } else if (
+    counts[0] === 3 &&
+    counts[1] === 2
+  ) {
+    typeId = "full_house";
+    scoringCards =
+      rankedGroups[0].concat(rankedGroups[1]);
+  } else if (isFlush) {
+    typeId = "flush";
+  } else if (isStraight) {
+    typeId = "straight";
+  } else if (counts[0] === 3) {
+    typeId = "three_kind";
+    scoringCards = rankedGroups[0];
+  } else if (
+    counts[0] === 2 &&
+    counts[1] === 2
+  ) {
+    typeId = "two_pair";
+    scoringCards =
+      rankedGroups[0].concat(rankedGroups[1]);
+  } else if (counts[0] === 2) {
+    typeId = "pair";
+    scoringCards = rankedGroups[0];
+  } else {
+    const highestCard = cards
+      .slice()
+      .sort(
+        (a, b) =>
+          RANK_ORDER[b.rank] - RANK_ORDER[a.rank]
+      )[0];
+
+    scoringCards = [highestCard];
+  }
+
+  return {
+    typeId,
+    scoringCards
+  };
+}
+
+
+/* ---------------------------------------------------------------
+   Game state
+   --------------------------------------------------------------- */
+
+function createGameState() {
+  return {
+    deck: createDeck(),
+    drawPile: [],
+    hand: [],
+    discardPile: [],
+
+    relics: [],
+    handLevels: {},
+
+    gold: 10,
+
+    ante: 1,
+    round: 1,
+
+    score: 0,
+    target: 0,
+
+    handsMax: 4,
+    handsLeft: 4,
+
+    discardsMax: 3,
+    discardsLeft: 3,
+
+    handSize: 8,
+    permHandSizeBonus: 0,
+
+    phase: "start",
+    opponent: null,
+
+    totalHandsPlayed: 0,
+    totalGoldEarned: 0,
+
+    highest: {},
+
+    _void: 0,
+    _puppet: false,
+    _ghost: 0
+  };
+}
+
+let game = createGameState();
+let sortMode = "rank";
+let shopStock = [];
+
+
+function getHandLevel(handId) {
+  return game.handLevels[handId] || 1;
+}
+
+function getHandStats(handId) {
+  const hand = findHandType(handId);
+  const level = getHandLevel(handId);
+
+  return {
+    chips:
+      hand.baseChips +
+      (level - 1) * Math.round(hand.baseChips * .6),
+
+    mult:
+      hand.baseMult +
+      (level - 1)
+  };
+}
+
+function getTargetForRound(ante, round) {
+  const hasClock = game.relics.some(
+    relic => relic.id === "spiral_clock"
+  );
+
+  const growth = hasClock ? 1.24 : 1.34;
+  const roundMultiplier =
+    [1, 1.3, 1.7][round - 1] || 1.7;
+
+  return Math.round(
+    100 *
+    Math.pow(growth, ante - 1) *
+    roundMultiplier
+  );
+}
+
+
+/* ---------------------------------------------------------------
+   Save system
+   --------------------------------------------------------------- */
+
+function saveGame() {
+  const saveData = {
+    ...game,
+    drawPile: [],
+    hand: [],
+    discardPile: [],
+    opponent: null
+  };
+
+  localStorage.setItem(
+    "aolh_save",
+    JSON.stringify(saveData)
+  );
+
+  getElement("saveStatus").textContent = "AUTO-SAVED";
+}
+
+function loadSave() {
+  try {
+    const saved = localStorage.getItem("aolh_save");
+
+    if (!saved) {
+      return false;
+    }
+
+    const data = JSON.parse(saved);
+
+    if (!data) {
+      return false;
+    }
+
+    game = Object.assign(createGameState(), data);
+
+    game.relics = (data.relics || [])
+      .map(savedRelic =>
+        RELIC_POOL.find(
+          relic => relic.id === savedRelic.id
+        )
+      )
+      .filter(Boolean);
+
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+
+/* ---------------------------------------------------------------
+   UI helpers
+   --------------------------------------------------------------- */
+
+function addLog(message, color = "#8a80b0") {
+  const entry = document.createElement("div");
+
+  entry.textContent = message;
+  entry.style.color = color;
+
+  getElement("logBar").prepend(entry);
+
+  while (getElement("logBar").children.length > 14) {
+    getElement("logBar").lastChild.remove();
+  }
+}
+
+function showFloatingText(
+  text,
+  x,
+  y,
+  color = "#2de8ff",
+  size = 22
+) {
+  const element = document.createElement("div");
+
+  element.className = "float-num";
+  element.textContent = text;
+
+  element.style.left = x + "px";
+  element.style.top = y + "px";
+  element.style.color = color;
+  element.style.fontSize = size + "px";
+
+  getElement("floatText").appendChild(element);
+
+  setTimeout(() => element.remove(), 950);
+}
+
+function screenFlash(
+  color = "255,255,255",
+  peak = .25,
+  duration = 250
+) {
+  const element = getElement("screenFlash");
+
+  element.style.background = `rgb(${color})`;
+  element.style.transition = "none";
+  element.style.opacity = peak;
+
+  requestAnimationFrame(() => {
+    element.style.transition =
+      `opacity ${duration}ms ease-out`;
+
+    element.style.opacity = 0;
+  });
+}
+
+function getSelectedCards() {
+  return game.hand.filter(card => card.selected);
+}
+
+
+/* ---------------------------------------------------------------
+   Rendering
+   --------------------------------------------------------------- */
+
+function renderHand() {
+  const handArea = getElement("handArea");
+
+  handArea.innerHTML = "";
+
+  for (const card of game.hand) {
+    const enhancement =
+      ENHANCEMENTS[card.enhancement];
+
+    const element =
+      document.createElement("div");
+
+    element.className =
+      `card suit-${card.suit}` +
+      (card.selected ? " selected" : "");
+
+    element.innerHTML = `
+      <div class="card-rank">${card.rank}</div>
+      <div class="card-suit">${SUIT_SYMBOL[card.suit]}</div>
+      <div class="card-keyword"
+           style="color:${enhancement.color}">
+        ${enhancement.name}
+      </div>
+    `;
+
+    if (card.enhancement !== "none") {
+      element.style.boxShadow =
+        `0 5px 18px #000b,
+         0 0 15px ${enhancement.color}55`;
+    }
+
+    element.onclick = () => toggleCard(card.uid);
+    element.onmouseenter = () => audio.hover();
+
+    handArea.appendChild(element);
+  }
+}
+
+function toggleCard(cardId) {
+  const card = game.hand.find(
+    item => item.uid === cardId
+  );
+
+  if (!card) {
+    return;
+  }
+
+  if (
+    !card.selected &&
+    getSelectedCards().length >= 5
+  ) {
+    audio.error();
+    return;
+  }
+
+  card.selected = !card.selected;
+
+  if (card.selected) {
+    audio.select();
+  } else {
+    audio.deselect();
+  }
+
+  renderAll();
+}
+
+function renderPreview() {
+  const selectedCards = getSelectedCards();
+
+  const rankElement =
+    getElement("handRankText");
+
+  const scoreElement =
+    getElement("handRankScore");
+
+  if (!selectedCards.length) {
+    rankElement.textContent = "—";
+    scoreElement.textContent = "select cards";
+    return;
+  }
+
+  const hand = evaluateHand(selectedCards);
+  const stats = getHandStats(hand.typeId);
+
+  rankElement.textContent =
+    `${findHandType(hand.typeId).name} ` +
+    `(Lv.${getHandLevel(hand.typeId)})`;
+
+  scoreElement.textContent =
+    `${stats.chips} chips × ${stats.mult} mult = ` +
+    `${formatNumber(stats.chips * stats.mult)}`;
+}
+
+function renderRelics() {
+  const bar = getElement("relicBar");
+
+  bar.innerHTML = game.relics
+    .map(relic => `
+      <div class="relic">
+        ${relic.icon}
+        <div class="tooltip">
+          <b style="color:var(--gold)">
+            ${relic.name}
+          </b>
+          <br>
+          ${relic.desc}
+        </div>
+      </div>
+    `)
+    .join("");
+}
+
+function renderHUD() {
+  getElement("hudAnte").textContent =
+    game.ante;
+
+  getElement("hudRound").textContent =
+    game.round;
+
+  getElement("hudGold").textContent =
+    formatNumber(game.gold);
+
+  getElement("hudHands").textContent =
+    game.handsLeft;
+
+  getElement("hudDiscards").textContent =
+    game.discardsLeft;
+
+  getElement("hudScore").textContent =
+    formatNumber(game.score);
+
+  getElement("hudTarget").textContent =
+    formatNumber(game.target);
+
+  getElement("btnPlay").disabled =
+    game.phase !== "playing" ||
+    !getSelectedCards().length ||
+    game.handsLeft <= 0;
+
+  getElement("btnDiscard").disabled =
+    game.phase !== "playing" ||
+    !getSelectedCards().length ||
+    game.discardsLeft <= 0;
+}
+
+function sortHand() {
+  game.hand.sort((a, b) => {
+    if (sortMode === "rank") {
+      return RANK_ORDER[b.rank] -
+        RANK_ORDER[a.rank];
+    }
+
+    return (
+      SUITS.indexOf(a.suit) -
+      SUITS.indexOf(b.suit) ||
+      RANK_ORDER[b.rank] -
+      RANK_ORDER[a.rank]
+    );
+  });
+}
+
+function renderAll() {
+  sortHand();
+  renderHand();
+  renderRelics();
+  renderHUD();
+  renderPreview();
+}
+
+
+/* ---------------------------------------------------------------
+   Round flow
+   --------------------------------------------------------------- */
+
+function getOpponentForAnte(ante) {
+  const index = Math.min(
+    opponents.length - 1,
+    Math.floor((ante - 1) / 1.2)
+  );
+
+  return opponents[index];
+}
+
+function drawToHand() {
+  while (game.hand.length < game.handSize) {
+
+    if (!game.drawPile.length) {
+      if (!game.discardPile.length) {
+        break;
+      }
+
+      game.drawPile =
+        shuffle(game.discardPile);
+
+      game.discardPile = [];
+    }
+
+    const card = game.drawPile.pop();
+
+    if (!card) {
+      break;
+    }
+
+    card.selected = false;
+    game.hand.push(card);
+
+    audio.deal(game.hand.length - 1);
+  }
+}
+
+function startRound() {
+  game.phase = "playing";
+  game.score = 0;
+
+  game.target =
+    getTargetForRound(game.ante, game.round);
+
+  game.opponent =
+    getOpponentForAnte(game.ante);
+
+  game.handsMax = 4;
+  game.handsLeft = 4;
+
+  game.discardsMax = 3;
+  game.discardsLeft = 3;
+
+  game.handSize =
+    8 + game.permHandSizeBonus;
+
+  for (const relic of game.relics) {
+    if (relic.onRoundStart) {
+      relic.onRoundStart(game);
+    }
+  }
+
+  game.drawPile = shuffle(
+    game.deck.map(card => ({
+      ...card,
+      selected: false
+    }))
+  );
+
+  game.hand = [];
+  game.discardPile = [];
+
+  drawToHand();
+
+  getElement("oppName").textContent =
+    game.opponent[0];
+
+  getElement("jokerTicker").textContent =
+    game.opponent[2];
+
+  addLog(
+    `— Round ${game.round} vs ${game.opponent[0]} —`,
+    "#a742ff"
+  );
+
+  audio.shuffle();
+
+  renderAll();
+  saveGame();
+}
+
+function discardSelected() {
+  if (game.phase !== "playing") {
+    return;
+  }
+
+  const selectedCards = getSelectedCards();
+
+  if (
+    !selectedCards.length ||
+    game.discardsLeft <= 0
+  ) {
+    audio.error();
+    return;
+  }
+
+  game.discardsLeft--;
+
+  for (const relic of game.relics) {
+    if (relic.onDiscard) {
+      relic.onDiscard(
+        game,
+        selectedCards.length
+      );
+    }
+  }
+
+  game.hand = game.hand.filter(
+    card => !card.selected
+  );
+
+  game.discardPile.push(...selectedCards);
+
+  audio.discard();
+
+  drawToHand();
+
+  renderAll();
+  saveGame();
+}
+
+
+/* ---------------------------------------------------------------
+   Scoring
+   --------------------------------------------------------------- */
+
+function applyCardEffects(cards, handType) {
+  for (const card of cards) {
+    const effect =
+      ENHANCEMENTS[card.enhancement];
+
+    if (effect.chips) {
+      game.chips += effect.chips;
+    }
+
+    if (effect.chipsOverride !== undefined) {
+      game.chips = effect.chipsOverride;
+    }
+
+    if (effect.mult) {
+      game.mult += effect.mult;
+    }
+
+    if (effect.multMul) {
+      game.mult *= effect.multMul;
+    }
+
+    if (
+      effect.luckyChance &&
+      Math.random() < effect.luckyChance
+    ) {
+      game.mult += effect.luckyMult;
+    }
+
+    if (effect.goldOnScore) {
+      game.gold += effect.goldOnScore;
+    }
+
+    if (effect.duplicate) {
+      game.chips +=
+        getHandStats(handType).chips * .15;
+    }
+  }
+}
+
+function applyHeldCardEffects() {
+  for (const card of game.hand) {
+    if (card.enhancement === "steel") {
+      game.mult *= 1.2;
+    }
+  }
+}
+
+function playSelected() {
+  if (game.phase !== "playing") {
+    return;
+  }
+
+  const selectedCards = getSelectedCards();
+
+  if (
+    !selectedCards.length ||
+    game.handsLeft <= 0
+  ) {
+    audio.error();
+    return;
+  }
+
+  game.handsLeft--;
+  game.totalHandsPlayed++;
+
+  const hand = evaluateHand(selectedCards);
+  const stats = getHandStats(hand.typeId);
+
+  game.chips = stats.chips;
+  game.mult = stats.mult;
+
+  applyCardEffects(
+    selectedCards,
+    hand.typeId
+  );
+
+  const result = {
+    typeId: hand.typeId,
+    cardsPlayed: selectedCards,
+    cardsPlayedCount: selectedCards.length,
+    scoringCards: hand.scoringCards
+  };
+
+  getElement("handRankText").textContent =
+    findHandType(hand.typeId).name;
+
+  audio.score();
+
+  animateCards(result, () => {
+    scorePlayedHand(result);
+  });
+}
+
+function scorePlayedHand(result) {
+  for (const relic of game.relics) {
+    if (relic.onHandScored) {
+      relic.onHandScored(game, result);
+    }
+  }
+
+  applyHeldCardEffects();
+
+  const gained = Math.max(
+    0,
+    Math.round(game.chips * game.mult)
+  );
+
+  game.score += gained;
+
+  game.highest[result.typeId] =
+    Math.max(
+      game.highest[result.typeId] || 0,
+      gained
+    );
+
+  showFloatingText(
+    "+" + formatNumber(gained),
+    620,
+    390,
+    "#ffd23f",
+    32
+  );
+
+  screenFlash(
+    "255,210,63",
+    .16,
+    220
+  );
+
+  game.hand = game.hand.filter(
+    card => !card.selected
+  );
+
+  game.discardPile.push(
+    ...result.cardsPlayed
+  );
+
+  drawToHand();
+
+  checkEnd();
+
+  renderAll();
+  saveGame();
+}
+
+function animateCards(result, finished) {
+  const scoringIds = new Set(
+    result.scoringCards.map(card => card.uid)
+  );
+
+  result.cardsPlayed.forEach((card, index) => {
+    setTimeout(() => {
+      if (!scoringIds.has(card.uid)) {
+        return;
+      }
+
+      audio.score(index);
+
+      const enhancement =
+        ENHANCEMENTS[card.enhancement];
+
+      if (enhancement.name) {
+        showFloatingText(
+          enhancement.name,
+          220 + index * 90,
+          600,
+          enhancement.color,
+          13
+        );
+      }
+    }, index * 120);
+  });
+
+  setTimeout(
+    finished,
+    result.cardsPlayed.length * 120 + 250
+  );
+}
+
+function checkEnd() {
+  if (game.score >= game.target) {
+    winRound();
+  } else if (game.handsLeft <= 0) {
+    loseRound();
+  }
+}
+
+function winRound() {
+  game.phase = "won";
+
+  audio.win();
+
+  screenFlash(
+    "57,255,136",
+    .24,
+    400
+  );
+
+  const reward =
+    4 +
+    game.ante +
+    game.handsLeft * 2;
+
+  game.gold += reward;
+  game.totalGoldEarned += reward;
+
+  getElement("winSummary").textContent =
+    `${game.opponent[0]} fades back into the static.`;
+
+  getElement("winRewards").innerHTML = `
+    <div style="color:var(--gold);font-size:22px">
+      +${reward} Gold
+    </div>
+
+    <div class="summary">
+      ${game.handsLeft} unused hand(s) × 2g bonus
+    </div>
+  `;
+
+  getElement("winScreen")
+    .classList.remove("hidden");
+
+  saveGame();
+}
+
+function loseRound() {
+  game.phase = "gameover";
+
+  audio.lose();
+
+  getElement("overSummary").textContent =
+    `${game.opponent[0]} takes what you owe.`;
+
+  getElement("overStats").innerHTML = `
+    <div class="statLine">
+      <span>Reached</span>
+      <b>Ante ${game.ante}, Round ${game.round}</b>
+    </div>
+
+    <div class="statLine">
+      <span>Score</span>
+      <b>
+        ${formatNumber(game.score)}
+        /
+        ${formatNumber(game.target)}
+      </b>
+    </div>
+
+    <div class="statLine">
+      <span>Hands played</span>
+      <b>${game.totalHandsPlayed}</b>
+    </div>
+
+    <div class="statLine">
+      <span>Gold earned</span>
+      <b>${formatNumber(game.totalGoldEarned)}</b>
+    </div>
+
+    <div class="statLine">
+      <span>Relics</span>
+      <b>${game.relics.length}</b>
+    </div>
+  `;
+
+  getElement("overScreen")
+    .classList.remove("hidden");
+}
+
+function proceedToNextRound() {
+  getElement("winScreen")
+    .classList.add("hidden");
+
+  game.round++;
+
+  if (game.round > 3) {
+    game.round = 1;
+    game.ante++;
+  }
+
+  if (
+    game.round !== 1 &&
+    Math.random() < .25
+  ) {
+    openEvent();
+  } else {
+    openShop();
+  }
+}
+
+
+/* ---------------------------------------------------------------
+   Shop
+   --------------------------------------------------------------- */
+
+function randomEnhancement() {
+  const available =
+    Object.keys(ENHANCEMENTS)
+      .filter(name => name !== "none");
+
+  return randomChoice(available);
+}
+
+function buildShop() {
+  shopStock = [];
+
+  for (let i = 0; i < 2; i++) {
+    const enhancement =
+      Math.random() < .65
+        ? randomEnhancement()
+        : "none";
+
+    shopStock.push({
+      kind: "card",
+
+      data: {
+        rank: randomChoice(RANKS),
+        suit: randomChoice(SUITS),
+        enhancement,
+
+        price:
+          enhancement === "none"
+            ? 4
+            : 7
+      }
+    });
+  }
+
+  const ownedRelics = new Set(
+    game.relics.map(relic => relic.id)
+  );
+
+  const availableRelics =
+    RELIC_POOL.filter(
+      relic => !ownedRelics.has(relic.id)
+    );
+
+  shuffle(availableRelics)
+    .slice(0, 2)
+    .forEach(relic => {
+      shopStock.push({
+        kind: "relic",
+        data: relic
+      });
+    });
+
+  const upgradeTarget =
+    randomChoice(
+      HAND_TYPES.filter(
+        hand => hand.id !== "flush_five"
+      )
+    );
+
+  shopStock.push({
+    kind: "upgrade",
+
+    data: {
+      typeId: upgradeTarget.id,
+      price:
+        5 +
+        getHandLevel(upgradeTarget.id) * 2
+    }
+  });
+
+  shopStock.push({
+    kind: "voucher",
+    data: {
+      price: 12
+    }
+  });
+}
+
+function openShop() {
+  game.phase = "shop";
+
+  buildShop();
+
+  getElement("shopFlavor").textContent =
+    randomChoice([
+      '"Everything has a price, friend. Yours especially."',
+      '"New stock. Do not ask where it came from."',
+      '"The house always restocks. Always."'
+    ]);
+
+  renderShop();
+
+  getElement("shopScreen")
+    .classList.remove("hidden");
+}
+
+function getShopDisplay(item) {
+  if (item.kind === "card") {
+    return {
+      icon: SUIT_SYMBOL[item.data.suit],
+
+      name:
+        `${item.data.rank} of ${item.data.suit}`,
+
+      desc:
+        item.data.enhancement === "none"
+          ? "Adds this card to your deck."
+          : ENHANCEMENTS[
+              item.data.enhancement
+            ].desc
+    };
+  }
+
+  if (item.kind === "relic") {
+    return {
+      icon: item.data.icon,
+      name: item.data.name,
+      desc: item.data.desc
+    };
+  }
+
+  if (item.kind === "upgrade") {
+    return {
+      icon: "⬆️",
+      name:
+        "Upgrade: " +
+        findHandType(item.data.typeId).name,
+
+      desc:
+        `Lv.${getHandLevel(item.data.typeId)} ` +
+        `→ Lv.${getHandLevel(item.data.typeId) + 1}`
+    };
+  }
+
+  return {
+    icon: "🃏",
+    name: "Hand Size Voucher",
+    desc: "+1 max hand size permanently."
+  };
+}
+
+function renderShop() {
+  getElement("hudGold").textContent =
+    formatNumber(game.gold);
+
+  const shopGrid =
+    getElement("shopGrid");
+
+  shopGrid.innerHTML = "";
+
+  shopStock.forEach((item, index) => {
+    const price = item.data.price;
+    const display = getShopDisplay(item);
+
+    const element =
+      document.createElement("div");
+
+    element.className =
+      "shop-item" +
+      (game.gold < price
+        ? " disabled"
+        : "");
+
+    element.innerHTML = `
+      <div class="shop-icon">
+        ${display.icon}
+      </div>
+
+      <div class="name">
+        ${display.name}
+      </div>
+
+      <div class="desc">
+        ${display.desc}
+      </div>
+
+      <div class="price">
+        ${price}g
+      </div>
+    `;
+
+    element.onclick = () => buyItem(index);
+
+    shopGrid.appendChild(element);
+  });
+}
+
+function buyItem(index) {
+  const item = shopStock[index];
+
+  if (!item) {
+    return;
+  }
+
+  const price = item.data.price;
+
+  if (game.gold < price) {
+    audio.error();
+    return;
+  }
+
+  game.gold -= price;
+
+  if (item.kind === "card") {
+    const card = createCard(
+      item.data.rank,
+      item.data.suit,
+      item.data.enhancement
+    );
+
+    game.deck.push(card);
+
+    addLog(
+      `Bought ${card.rank} of ${card.suit}`,
+      "#39ff88"
+    );
+  }
+
+  if (item.kind === "relic") {
+    game.relics.push(item.data);
+
+    addLog(
+      `Acquired relic: ${item.data.name}`,
+      "#ffd23f"
+    );
+
+    audio.relic();
+  }
+
+  if (item.kind === "upgrade") {
+    const currentLevel =
+      getHandLevel(item.data.typeId);
+
+    game.handLevels[item.data.typeId] =
+      currentLevel + 1;
+
+    addLog(
+      `${findHandType(item.data.typeId).name} upgraded!`,
+      "#2de8ff"
+    );
+  }
+
+  if (item.kind === "voucher") {
+    game.permHandSizeBonus++;
+
+    addLog(
+      "Hand size permanently increased!",
+      "#ffd23f"
+    );
+  }
+
+  shopStock.splice(index, 1);
+
+  audio.buy();
+
+  renderShop();
+  saveGame();
+}
+
+function rerollShop() {
+  if (game.gold < 5) {
+    audio.error();
+    return;
+  }
+
+  game.gold -= 5;
+
+  buildShop();
+  renderShop();
+
+  audio.buy();
+  saveGame();
+}
+
+function leaveShop() {
+  getElement("shopScreen")
+    .classList.add("hidden");
+
+  startRound();
+}
+
+
+/* ---------------------------------------------------------------
+   Random events
+   --------------------------------------------------------------- */
+
+const EVENTS = [
+  [
+    "THE CIGARETTE MACHINE",
+    "It only takes memories now. Feed it one?",
+
+    [
+      [
+        "Trade 8 Gold for a random Relic",
+
+        game => {
+          if (game.gold >= 8) {
+            game.gold -= 8;
+            giveRandomRelic(game);
+          } else {
+            audio.error();
+          }
+        }
+      ],
+
+      [
+        "Walk away",
+        () => {}
+      ]
+    ]
+  ],
+
+  [
+    "A CRACKED SLOT MACHINE",
+    "Pull the lever. It might cost you.",
+
+    [
+      [
+        "Pull it: random +15 Gold or −5 Gold",
+
+        game => {
+          if (Math.random() < .5) {
+            game.gold += 15;
+
+            addLog(
+              "The lever gives! +15 gold",
+              "#ffd23f"
+            );
+
+            audio.buy();
+          } else {
+            game.gold =
+              Math.max(0, game.gold - 5);
+
+            addLog(
+              "The lever bites back. −5 gold",
+              "#ff3b3b"
+            );
+
+            audio.error();
+          }
+        }
+      ],
+
+      [
+        "Leave it alone",
+        () => {}
+      ]
+    ]
+  ],
+
+  [
+    "THE CARD SHARPENER",
+    "A rusted machine that can enhance one card in your deck.",
+
+    [
+      [
+        "Enhance a random card",
+
+        game => {
+          if (!game.deck.length) {
+            return;
+          }
+
+          const card =
+            randomChoice(game.deck);
+
+          card.enhancement =
+            randomEnhancement();
+
+          const enhancement =
+            ENHANCEMENTS[
+              card.enhancement
+            ];
+
+          addLog(
+            `${card.rank} of ${card.suit} became ` +
+            `${enhancement.name}!`,
+            enhancement.color
+          );
+
+          audio.relic();
+        }
+      ],
+
+      [
+        "Decline",
+        () => {}
+      ]
+    ]
+  ],
+
+  [
+    "GHOST TOLL BOOTH",
+    '"Pay the toll, or take the long way."',
+
+    [
+      [
+        "Pay 6 Gold: remove a card",
+
+        game => {
+          if (
+            game.gold >= 6 &&
+            game.deck.length > 5
+          ) {
+            game.gold -= 6;
+
+            const index =
+              Math.floor(
+                Math.random() *
+                game.deck.length
+              );
+
+            game.deck.splice(index, 1);
+
+            addLog(
+              "A card vanished from your deck."
+            );
+
+            audio.buy();
+          } else {
+            audio.error();
+          }
+        }
+      ],
+
+      [
+        "Take the long way",
+        () => {}
+      ]
+    ]
+  ],
+
+  [
+    "THE MEMORY VENDOR",
+    '"I will trade you a boost. For now."',
+
+    [
+      [
+        "+2 max hands, −3 max discards",
+
+        game => {
+          game.handsMax += 2;
+          game.handsLeft += 2;
+
+          game.discardsMax =
+            Math.max(
+              0,
+              game.discardsMax - 3
+            );
+
+          game.discardsLeft =
+            Math.max(
+              0,
+              game.discardsLeft - 3
+            );
+        }
+      ],
+
+      [
+        "Decline",
+        () => {}
+      ]
+    ]
+  ]
+];
+
+function giveRandomRelic(gameState) {
+  const owned = new Set(
+    gameState.relics.map(relic => relic.id)
+  );
+
+  const available =
+    RELIC_POOL.filter(
+      relic => !owned.has(relic.id)
+    );
+
+  if (!available.length) {
+    gameState.gold += 10;
+    return;
+  }
+
+  const relic =
+    randomChoice(available);
+
+  gameState.relics.push(relic);
+
+  audio.relic();
+
+  addLog(
+    `New relic: ${relic.name}!`,
+    "#ffd23f"
+  );
+}
+
+function openEvent() {
+  game.phase = "event";
+
+  const event = randomChoice(EVENTS);
+
+  getElement("eventTitle").textContent =
+    event[0];
+
+  getElement("eventFlavor").textContent =
+    event[1];
+
+  const options =
+    getElement("eventOptions");
+
+  options.innerHTML = "";
+
+  for (const option of event[2]) {
+    const button =
+      document.createElement("button");
+
+    button.className = "btn";
+    button.textContent = option[0];
+
+    button.onclick = () => {
+      option[1](game);
+
+      getElement("eventScreen")
+        .classList.add("hidden");
+
+      openShop();
+      saveGame();
+    };
+
+    options.appendChild(button);
+  }
+
+  getElement("eventScreen")
+    .classList.remove("hidden");
+}
+
+
+/* ---------------------------------------------------------------
+   New runs and controls
+   --------------------------------------------------------------- */
+
+function hideAllScreens() {
+  [
+    "startScreen",
+    "overScreen",
+    "winScreen",
+    "shopScreen",
+    "eventScreen"
+  ].forEach(id => {
+    getElement(id)
+      .classList.add("hidden");
+  });
+}
+
+function startNewRun() {
+  game = createGameState();
+  hideAllScreens();
+  startRound();
+}
+
+getElement("btnStart").onclick = () => {
+  audio.unlock();
+  audio.ambient();
+  startNewRun();
+};
+
+getElement("btnClearSave").onclick = () => {
+  localStorage.removeItem("aolh_save");
+
+  game = createGameState();
+
+  alert("Save cleared.");
+};
+
+getElement("btnRetry").onclick = () => {
+  getElement("overScreen")
+    .classList.add("hidden");
+
+  startNewRun();
+};
+
+getElement("btnPlay").onclick =
+  playSelected;
+
+getElement("btnDiscard").onclick =
+  discardSelected;
+
+getElement("btnSort").onclick = event => {
+  sortMode =
+    sortMode === "rank"
+      ? "suit"
+      : "rank";
+
+  event.currentTarget.innerHTML =
+    `SORT: ${sortMode.toUpperCase()} ` +
+    `<small>[S]</small>`;
+
+  renderAll();
+};
+
+getElement("btnContinue").onclick =
+  proceedToNextRound;
+
+getElement("btnLeaveShop").onclick =
+  leaveShop;
+
+getElement("btnReroll").onclick =
+  rerollShop;
+
+
+/* ---------------------------------------------------------------
+   Keyboard controls
+   --------------------------------------------------------------- */
+
+window.addEventListener("keydown", event => {
+  if (event.target.tagName === "INPUT") {
+    return;
+  }
+
+  if (game.phase !== "playing") {
+    return;
+  }
+
+  if (event.key === "Enter") {
+    playSelected();
+  }
+
+  if (
+    event.key === "Backspace" ||
+    event.key === "Delete"
+  ) {
+    event.preventDefault();
+    discardSelected();
+  }
+
+  if (event.key.toLowerCase() === "s") {
+    getElement("btnSort").click();
+  }
+});
+
+
+/* ---------------------------------------------------------------
+   Background
+   --------------------------------------------------------------- */
+
+const backgroundCanvas =
+  getElement("bgCanvas");
+
+const backgroundContext =
+  backgroundCanvas.getContext("2d");
+
+const CANVAS_WIDTH = 1280;
+const CANVAS_HEIGHT = 800;
+
+const particles = [];
+
+for (let i = 0; i < 65; i++) {
+  particles.push({
+    x: Math.random() * CANVAS_WIDTH,
+    y: Math.random() * CANVAS_HEIGHT,
+    vx: (Math.random() - .5) * .3,
+    vy: -Math.random() * .3 - .03,
+    radius: .5 + Math.random() * 1.8,
+    alpha: .1 + Math.random() * .35
+  });
+}
+
+const glyphs = [];
+
+for (let i = 0; i < 12; i++) {
+  glyphs.push({
+    x: Math.random() * CANVAS_WIDTH,
+    y: Math.random() * CANVAS_HEIGHT,
+    size: 20 + Math.random() * 50,
+    speed: .05 + Math.random() * .18,
+    drift: (Math.random() - .5) * .12,
+    symbol: randomChoice(
+      Object.values(SUIT_SYMBOL)
+    )
+  });
+}
+
+function drawBackground() {
+  backgroundContext.clearRect(
+    0,
+    0,
+    CANVAS_WIDTH,
+    CANVAS_HEIGHT
+  );
+
+  const glow =
+    backgroundContext.createRadialGradient(
+      CANVAS_WIDTH / 2,
+      CANVAS_HEIGHT * .85,
+      50,
+      CANVAS_WIDTH / 2,
+      CANVAS_HEIGHT * .85,
+      700
+    );
+
+  glow.addColorStop(
+    0,
+    "rgba(167,66,255,.12)"
+  );
+
+  glow.addColorStop(
+    1,
+    "rgba(0,0,0,0)"
+  );
+
+  backgroundContext.fillStyle = glow;
+
+  backgroundContext.fillRect(
+    0,
+    0,
+    CANVAS_WIDTH,
+    CANVAS_HEIGHT
+  );
+
+  for (const glyph of glyphs) {
+    glyph.y -= glyph.speed;
+    glyph.x += glyph.drift;
+
+    if (glyph.y < -80) {
+      glyph.y = CANVAS_HEIGHT + 80;
+      glyph.x =
+        Math.random() * CANVAS_WIDTH;
+    }
+
+    backgroundContext.font =
+      `${glyph.size}px serif`;
+
+    backgroundContext.fillStyle =
+      "rgba(200,180,255,.055)";
+
+    backgroundContext.fillText(
+      glyph.symbol,
+      glyph.x,
+      glyph.y
+    );
+  }
+
+  for (const particle of particles) {
+    particle.x += particle.vx;
+    particle.y += particle.vy;
+
+    if (particle.y < -10) {
+      particle.y = CANVAS_HEIGHT + 10;
+      particle.x =
+        Math.random() * CANVAS_WIDTH;
+    }
+
+    backgroundContext.beginPath();
+
+    backgroundContext.fillStyle =
+      `hsla(
+        ${randomChoice([190, 270, 300, 45])},
+        100%,
+        70%,
+        ${particle.alpha}
+      )`;
+
+    backgroundContext.arc(
+      particle.x,
+      particle.y,
+      particle.radius,
+      0,
+      Math.PI * 2
+    );
+
+    backgroundContext.fill();
+  }
+
+  const scanlineY =
+    (performance.now() / 16) % 1000 - 100;
+
+  const scanline =
+    backgroundContext.createLinearGradient(
+      0,
+      scanlineY - 40,
+      0,
+      scanlineY + 40
+    );
+
+  scanline.addColorStop(
+    0,
+    "transparent"
+  );
+
+  scanline.addColorStop(
+    .5,
+    "rgba(45,232,255,.035)"
+  );
+
+  scanline.addColorStop(
+    1,
+    "transparent"
+  );
+
+  backgroundContext.fillStyle = scanline;
+
+  backgroundContext.fillRect(
+    0,
+    scanlineY - 40,
+    CANVAS_WIDTH,
+    80
+  );
+
+  requestAnimationFrame(drawBackground);
+}
+
+
+/* ---------------------------------------------------------------
+   Scaling
+   --------------------------------------------------------------- */
+
+function fitGame() {
+  const scale = Math.min(
+    innerWidth / CANVAS_WIDTH,
+    innerHeight / CANVAS_HEIGHT,
+    1
+  );
+
+  getElement("canvasWrap").style.transform =
+    `translate(-50%, -50%) scale(${scale})`;
+}
+
+window.addEventListener(
+  "resize",
+  fitGame
+);
+
+
+/* ---------------------------------------------------------------
+   Start
+   --------------------------------------------------------------- */
+
+if (loadSave()) {
+  getElement("startScreen")
+    .classList.remove("hidden");
+
+  addLog(
+    "Saved run found. Starting a new run will overwrite it.",
+    "#ffd23f"
+  );
+}
+
+addLog(
+  "Welcome to the Arcade of Lost Hands.",
+  "#a742ff"
+);
+
+fitGame();
+drawBackground();
+</script>
+
+</body>
+</html>
