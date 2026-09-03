@@ -1,12 +1,149 @@
+const rl=require('readline').createInterface({input:process.stdin,output:process.stdout})
 let d=[],s=['♠','♥','♦','♣'],v=['2','3','4','5','6','7','8','9','10','J','Q','K','A']
-for(let x=0;x<4;x++)for(let y=0;y<13;y++)d.push(v[y]+s[x])
+function mkdeck(){let dd=[];for(let x=0;x<4;x++)for(let y=0;y<13;y++)dd.push(v[y]+s[x]);return dd}
 function shuf(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-d=shuf(d)
-let p1=[d.pop(),d.pop()],p2=[d.pop(),d.pop()],cpu=[d.pop(),d.pop()]
 function val(c){let n=c.slice(0,-1);return v.indexOf(n)}
-function best(h){return Math.max(val(h[0]),val(h[1]))}
-console.log("YOU:",p1.join(' '),"CPU:",cpu.join(' '))
-let yb=best(p1),cb=best(cpu)
-if(yb>cb)console.log("u win lol",yb,'>',cb)
-else if(cb>yb)console.log("cpu wins rip",cb,'>',yb)
-else console.log("tie i guess")
+function suit(c){return c.slice(-1)}
+
+// super scuffed hand ranker lol
+function rank(hand){
+  let vals=hand.map(val).sort((a,b)=>a-b)
+  let suits=hand.map(suit)
+  let counts={}
+  vals.forEach(x=>counts[x]=(counts[x]||0)+1)
+  let cvals=Object.values(counts).sort((a,b)=>b-a)
+  let isFlush=suits.every(x=>x==suits[0])
+  let isStraight=true
+  for(let i=1;i<vals.length;i++){if(vals[i]!=vals[i-1]+1){isStraight=false;break}}
+  // ace low straight hack, dont judge me
+  if(!isStraight && JSON.stringify(vals)==JSON.stringify([0,1,2,3,12])) isStraight=true
+
+  if(isStraight&&isFlush)return[8,'Straight Flush']
+  if(cvals[0]==4)return[7,'Four of a Kind']
+  if(cvals[0]==3&&cvals[1]==2)return[6,'Full House']
+  if(isFlush)return[5,'Flush']
+  if(isStraight)return[4,'Straight']
+  if(cvals[0]==3)return[3,'Three of a Kind']
+  if(cvals[0]==2&&cvals[1]==2)return[2,'Two Pair']
+  if(cvals[0]==2)return[1,'Pair']
+  return[0,'High Card '+v[Math.max(...vals)]]
+}
+
+let chips=100,cpuChips=100,pot=0
+
+function round(){
+  d=shuf(mkdeck())
+  let p1=[d.pop(),d.pop(),d.pop(),d.pop(),d.pop()]
+  let cpu=[d.pop(),d.pop(),d.pop(),d.pop(),d.pop()]
+  console.log('\n--- new hand ---')
+  console.log('your cards:',p1.join(' '))
+  rl.question('bet amount (or 0 to fold): ',ans=>{
+    let bet=parseInt(ans)||0
+    if(bet<=0){console.log('you folded, weak');cpuChips+=10;chips-=10;next();return}
+    chips-=bet;cpuChips-=bet;pot=bet*2
+    let pr=rank(p1),cr=rank(cpu)
+    console.log('CPU had:',cpu.join(' '),'->',cr[1])
+    console.log('you had:',pr[1]<!DOCTYPE html>
+<html><head><title>messy poker</title>
+<style>
+body{background:#0a3d0a;color:#fff;font-family:monospace;text-align:center;padding:20px}
+button{padding:10px 20px;margin:5px;font-size:16px;cursor:pointer}
+#cards{font-size:28px;margin:15px}
+#log{background:#052605;padding:10px;min-height:100px;text-align:left;white-space:pre-wrap}
+input{font-size:16px;width:80px}
+</style></head>
+<body>
+<h1>messy poker v3</h1>
+<div>chips: <span id="ch">100</span> | cpu: <span id="cch">100</span></div>
+<div id="cards"></div>
+<input id="betbox" type="number" value="10">
+<button onclick="doBet()">BET</button>
+<button onclick="doFold()">FOLD</button>
+<div id="log"></div>
+<script>
+let s=['♠','♥','♦','♣'],v=['2','3','4','5','6','7','8','9','10','J','Q','K','A']
+let chips=100,cpuChips=100,p1=[],cpu=[],d=[]
+function mkdeck(){let dd=[];for(let x=0;x<4;x++)for(let y=0;y<13;y++)dd.push(v[y]+s[x]);return dd}
+function shuf(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function val(c){let n=c.slice(0,-1);return v.indexOf(n)}
+function suit(c){return c.slice(-1)}
+function rank(hand){
+  let vals=hand.map(val).sort((a,b)=>a-b)
+  let suits=hand.map(suit)
+  let counts={}
+  vals.forEach(x=>counts[x]=(counts[x]||0)+1)
+  let cvals=Object.values(counts).sort((a,b)=>b-a)
+  let isFlush=suits.every(x=>x==suits[0])
+  let isStraight=true
+  for(let i=1;i<vals.length;i++){if(vals[i]!=vals[i-1]+1){isStraight=false;break}}
+  if(!isStraight && JSON.stringify(vals)==JSON.stringify([0,1,2,3,12])) isStraight=true
+  if(isStraight&&isFlush)return[8,'Straight Flush']
+  if(cvals[0]==4)return[7,'Four of a Kind']
+  if(cvals[0]==3&&cvals[1]==2)return[6,'Full House']
+  if(isFlush)return[5,'Flush']
+  if(isStraight)return[4,'Straight']
+  if(cvals[0]==3)return[3,'Three of a Kind']
+  if(cvals[0]==2&&cvals[1]==2)return[2,'Two Pair']
+  if(cvals[0]==2)return[1,'Pair']
+  return[0,'High Card '+v[Math.max(...vals)]]
+}
+function log(t){document.getElementById('log').innerText+=t+'\n'}
+function newHand(){
+  d=shuf(mkdeck())
+  p1=[d.pop(),d.pop(),d.pop(),d.pop(),d.pop()]
+  cpu=[d.pop(),d.pop(),d.pop(),d.pop(),d.pop()]
+  document.getElementById('cards').innerText='YOU: '+p1.join(' ')
+  document.getElementById('log').innerText=''
+}
+function updateChips(){
+  document.getElementById('ch').innerText=chips
+  document.getElementById('cch').innerText=cpuChips
+  if(chips<=0){log('broke, game over');disableBtns()}
+  if(cpuChips<=0){log('cpu is broke, u the goat');disableBtns()}
+}
+function disableBtns(){document.querySelectorAll('button').forEach(b=>b.disabled=true)}
+function doFold(){
+  log('you folded, weak')
+  chips-=10;cpuChips+=10
+  updateChips()
+  setTimeout(newHand,1200)
+}
+function doBet(){
+  let bet=parseInt(document.getElementById('betbox').value)||0
+  if(bet<=0){doFold();return}
+  if(bet>chips){log("you don't have that much lol");return}
+  chips-=bet;cpuChips-=bet
+  let pot=bet*2
+  let pr=rank(p1),cr=rank(cpu)
+  log('CPU had: '+cpu.join(' ')+' -> '+cr[1])
+  log('you had: '+pr[1])
+  if(pr[0]>cr[0]){log('YOU WIN pot of '+pot);chips+=pot}
+  else if(cr[0]>pr[0]){log('cpu wins pot of '+pot);cpuChips+=pot}
+  else{
+    let pv=Math.max(...p1.map(val)),cv=Math.max(...cpu.map(val))
+    if(pv>=cv){log('you win tiebreak');chips+=pot}else{log('cpu wins tiebreak');cpuChips+=pot}
+  }
+  updateChips()
+  setTimeout(newHand,2000)
+}
+newHand()
+</script>
+</body></html>)
+    if(pr[0]>cr[0]){console.log('YOU WIN pot of',pot);chips+=pot}
+    else if(cr[0]>pr[0]){console.log('cpu wins pot of',pot);cpuChips+=pot}
+    else{
+      // tiebreak on high val since im lazy
+      let pv=Math.max(...p1.map(val)),cv=Math.max(...cpu.map(val))
+      if(pv>=cv){console.log('you win tiebreak');chips+=pot}else{console.log('cpu wins tiebreak');cpuChips+=pot}
+    }
+    next()
+  })
+}
+function next(){
+  console.log('chips:',chips,'| cpu chips:',cpuChips)
+  if(chips<=0){console.log('broke, game over');rl.close();return}
+  if(cpuChips<=0){console.log('cpu is broke, u the goat');rl.close();return}
+  rl.question('play again? (y/n) ',a=>{if(a=='y')round();else rl.close()})
+}
+console.log('=== messy poker v2 ===')
+round()
